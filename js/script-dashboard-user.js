@@ -3,7 +3,7 @@
 // ===========================
 
 import { db } from "./database.js";
-import { ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-database.js";
+import { ref, onValue, update, get } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-database.js";
 
 let currentUser = null;
 let dataJadwal = [];
@@ -79,11 +79,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Render Tabel Jadwal (User View)
 function renderTabel() {
-    let tabelBodi = document.getElementById("tabelBodi");
-    if (!tabelBodi) return;
-    tabelBodi.innerHTML = "";
+    let wadahTabel = document.getElementById("tabelKamarContainer");
+    if (!wadahTabel) return;
+    wadahTabel.innerHTML = "";
     if (!currentUser) return;
     updateStats();
+
+    // Update Teks Sapaan dengan Nama Asli User
+    let userRecord = dataJadwal.find(d => d.nowa === currentUser.phone);
+    let elGreeting = document.getElementById("dashGreeting");
+    if (elGreeting) {
+        elGreeting.innerText = `Selamat datang, ${userRecord ? userRecord.nama : 'Mahasiswa'} 👋`;
+    }
 
     let hasUnread = false;
     dataJadwal.forEach(item => {
@@ -125,34 +132,119 @@ function renderTabel() {
         elEmpty.style.display = filteredData.length === 0 ? "block" : "none";
     }
 
-    filteredData.forEach((item) => {
-        let statusHTML = "";
-        if (item.selesai) {
-            statusHTML = `<span class="status-selesai">✅ Selesai</span>`;
-        } else if (item.menungguVerifikasi) {
-            statusHTML = `<span class="status-belum" style="background:rgba(245,158,11,0.1); color:var(--orange);">⏳ Menunggu Verifikasi</span>`;
+    let kamarGroups = {};
+    filteredData.forEach(item => {
+        let namaKamar = item.kamar || "Belum ada kamar";
+        if (!kamarGroups[namaKamar]) kamarGroups[namaKamar] = [];
+        kamarGroups[namaKamar].push(item);
+    });
+
+    let sortedKamarKeys = Object.keys(kamarGroups).sort();
+    let gridHTML = '<div class="kamar-grid">';
+
+    sortedKamarKeys.forEach(namaKamar => {
+        let items = kamarGroups[namaKamar];
+        let selesaiCount = items.filter(i => i.selesai).length;
+        let allDone = items.length > 0 && selesaiCount === items.length;
+        let hasPending = items.some(i => i.menungguVerifikasi && !i.selesai);
+
+        let cardBadge = '';
+        if (allDone) {
+            cardBadge = '<div class="card-badge-done"><span style="font-size:10px;">●</span> Done</div>';
+        } else if (hasPending) {
+            cardBadge = '<div class="card-badge-status" style="background:rgba(217,119,6,0.15); color:#d97706;"><span style="font-size:10px;">●</span> Pending</div>';
         } else {
+            cardBadge = '<div class="card-badge-status"><span style="font-size:10px;">●</span> Status</div>';
+        }
+
+        let cardHTML = `
+        <div class="kamar-card">
+            <div class="kamar-card-header">
+                <div class="kamar-card-title">
+                    <div class="kamar-card-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4v16"></path><path d="M2 8h18a2 2 0 0 1 2 2v10"></path><path d="M2 17h20"></path><path d="M6 8v9"></path></svg>
+                    </div>
+                    ${namaKamar}
+                </div>
+                ${cardBadge}
+            </div>
+            <div class="kamar-card-subheader">
+                <span>Nama Penghuni</span>
+                <span>Tugas Kebersihan</span>
+            </div>
+        `;
+
+        items.forEach(item => {
+            let statusBadge = '';
+            if (item.alpa) {
+                statusBadge = '<span class="row-badge belum" style="background:rgba(220,38,38,0.1); color:#dc2626; border-color:rgba(220,38,38,0.2);">Alpa (Terlambat)</span>';
+            } else if (item.selesai) {
+                statusBadge = '<span class="row-badge done">Selesai</span>';
+            } else if (item.menungguVerifikasi) {
+                statusBadge = '<span class="row-badge pending">Menunggu</span>';
+            } else {
+                statusBadge = '<span class="row-badge belum">Belum</span>';
+            }
+
+            let extraBtn = '';
+            let myTaskMarker = '';
+            
             if (item.nowa === currentUser.phone) {
+                myTaskMarker = '<span style="background:var(--accent); color:white; font-size:10px; padding:2px 6px; border-radius:4px; font-weight:bold; margin-left:8px;">Tugas Saya</span>';
+                
                 if (item.pesanAdmin && !item.pesanDibaca) {
-                    statusHTML = `<button class="btn-pesan" onclick="bukaPesanUser('${item.id}', '${item.pesanAdmin}')">📩 Ada Pesan!</button>`;
-                } else {
-                    statusHTML = `
-                        <button class="btn-upload" onclick="bukaKamera('${item.id}')">📷 Kirim Bukti</button>
-                        <button class="btn-lihat" style="margin-top:6px; background:rgba(6,182,212,0.1); color:var(--cyan); border:1px solid rgba(6,182,212,0.2);" onclick="izinTugas('${item.id}')">📝 Izin/Sakit</button>
-                    `;
+                    extraBtn = `<button onclick="bukaPesanUser('${item.id}', '${item.pesanAdmin}')" style="background:var(--red); color:white; border:none; padding:4px 10px; border-radius:6px; font-size:11px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:4px;">📩 Pesan Admin!</button>`;
+                } else if (item.alpa) {
+                    extraBtn = `<span style="font-size:11px; color:#dc2626; font-weight:600;">Waktu Habis</span>`;
+                } else if (!item.selesai && !item.menungguVerifikasi) {
+                    if (item.hari === hariIniStr) {
+                        extraBtn = `
+                            <button onclick="bukaKamera('${item.id}')" style="background:var(--green); color:white; border:none; padding:4px 10px; border-radius:6px; font-size:11px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:4px;">📷 Kirim Bukti</button>
+                            <button onclick="izinTugas('${item.id}')" style="background:rgba(6,182,212,0.1); color:var(--cyan); border:1px solid rgba(6,182,212,0.2); padding:4px 10px; border-radius:6px; font-size:11px; font-weight:600; cursor:pointer;">📝 Izin</button>
+                        `;
+                    } else {
+                        extraBtn = `<span style="font-size:11px; color:var(--text2); font-weight:600; text-align:right;">Hanya bisa kirim<br>di hari H</span>`;
+                    }
                 }
             } else {
-                statusHTML = `<span class="status-belum">❌ Belum</span>`;
+                if (item.selesai) {
+                    extraBtn = `<span style="font-size:11px; color:var(--green); font-weight:600;">Sudah Selesai</span>`;
+                } else if (item.menungguVerifikasi) {
+                    extraBtn = `<span style="font-size:11px; color:var(--orange); font-weight:600;">Sedang Verifikasi</span>`;
+                } else {
+                    extraBtn = `<span style="font-size:11px; color:var(--text2); font-weight:600;">Belum Dikerjakan</span>`;
+                }
             }
-        }
-        let baris = `<tr>
-            <td>${item.hari}</td>
-            <td style="white-space: nowrap;">${item.nama}</td>
-            <td>${item.tugas}</td>
-            <td style="vertical-align: middle;">${statusHTML}</td>
-        </tr>`;
-        tabelBodi.innerHTML += baris;
+
+            cardHTML += `
+            <div class="kamar-row" style="flex-direction:column; align-items:flex-start; gap:12px;">
+                <div style="display:flex; width:100%; gap:10px; align-items:center;">
+                    <div class="kamar-row-info" style="flex:1;">
+                        <div style="display:flex; align-items:center;">
+                            <div class="kamar-row-name" style="font-weight:600; font-size:14px;">${item.nama}</div>
+                            ${myTaskMarker}
+                        </div>
+                        <div style="margin-top:4px; font-size:12px; color:var(--text2); font-weight:600;">Hari ${item.hari}</div>
+                        <div style="margin-top:6px;">${statusBadge}</div>
+                    </div>
+                </div>
+                
+                <div style="display:flex; width:100%; justify-content:space-between; align-items:center; background:var(--surface2); padding:8px 12px; border-radius:8px; border:1px solid var(--border);">
+                    <div class="kamar-row-task" style="flex:1; margin-right:12px; font-size:12px; color:var(--text);">${item.tugas}</div>
+                    <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
+                        ${extraBtn}
+                    </div>
+                </div>
+            </div>
+            `;
+        });
+
+        cardHTML += `</div>`;
+        gridHTML += cardHTML;
     });
+
+    gridHTML += '</div>';
+    wadahTabel.innerHTML = gridHTML;
 }
 
 // Logout
@@ -287,15 +379,47 @@ document.getElementById("btnConfirmUpload").addEventListener("click", async func
     let pesanUser = document.getElementById("pesanUploadUser").value.trim() || "Tidak ada pesan";
     
     let btn = document.getElementById("btnConfirmUpload");
-    btn.innerText = "Mengompres & Mengirim...";
+    btn.innerText = "Memverifikasi & Mengompres...";
     btn.disabled = true;
     
+    // Hash function to check duplicates
+    function getHash(str) {
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            hash = ((hash << 5) - hash) + str.charCodeAt(i);
+            hash = hash & hash;
+        }
+        return Math.abs(hash).toString();
+    }
+
     try {
         let arrayFotoTerkompres = [];
+        let isCheat = false;
+        
+        // Fetch existing hashes from DB
+        let snapshotHashes = await get(ref(db, 'settings/riwayat_foto_hashes'));
+        let existingHashes = snapshotHashes.exists() ? snapshotHashes.val() : {};
+
         for (let i = 0; i < filesToUpload.length; i++) {
             let base64Kecil = await kompresGambar(filesToUpload[i]);
+            let imgHash = getHash(base64Kecil);
+            
+            if (existingHashes[imgHash]) {
+                isCheat = true;
+                break;
+            }
             arrayFotoTerkompres.push(base64Kecil);
         }
+
+        if (isCheat) {
+            munculNotif("TOLAK: Foto ini sudah pernah digunakan sebelumnya (Curang)!", "#dc2626");
+            tutupPreviewUpload();
+            btn.innerText = "🚀 Kirim Sekarang";
+            btn.disabled = false;
+            return;
+        }
+
+        btn.innerText = "Mengirim...";
         await update(ref(db, 'jadwal_piket/' + idSedangUpload), {
             menungguVerifikasi: true, foto: arrayFotoTerkompres[0],
             fotos: arrayFotoTerkompres, pesanUser: pesanUser
@@ -314,7 +438,12 @@ document.getElementById("btnConfirmUpload").addEventListener("click", async func
 window.bukaProfil = function() {
     let userRecord = dataJadwal.find(d => d.nowa === currentUser.phone);
     document.getElementById("profilNama").innerText = userRecord ? userRecord.nama : currentUser.username || "-";
-    document.getElementById("profilNowa").innerText = currentUser.phone || "-";
+    document.getElementById("profilKamar").innerText = (userRecord && userRecord.kamar) ? userRecord.kamar : "Belum dipilih";
+    let phoneTampil = currentUser.phone || "-";
+    if (phoneTampil.startsWith("62")) {
+        phoneTampil = "0" + phoneTampil.substring(2);
+    }
+    document.getElementById("profilNowa").innerText = phoneTampil;
     document.getElementById("profilPassBaru").value = "";
     document.getElementById("modalProfil").style.display = "flex";
 }

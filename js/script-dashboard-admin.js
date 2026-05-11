@@ -3,7 +3,7 @@
 // ===========================
 
 import { db } from "./database.js";
-import { ref, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-database.js";
+import { ref, push, onValue, remove, update, get } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-database.js";
 
 const LINK_WEB_KAMU = "https://chief123-cod.github.io/Jadwal-asrama/";
 
@@ -20,6 +20,80 @@ if (!sesi) {
         window.location.href = "dashboard-user.html";
     }
 }
+
+// Logika Otomatis Dunia Nyata: Reset Minggu & Deadline 19:00
+async function jalankanLogikaOtomatis() {
+    let now = new Date();
+    let hariIniStr = now.toISOString().split('T')[0];
+    let jam = now.getHours();
+    let isMinggu = now.getDay() === 0;
+
+    try {
+        let snapshotReset = await get(ref(db, 'settings/last_reset_date'));
+        let lastReset = snapshotReset.val() || "";
+
+        let updateData = {};
+        let butuhUpdate = false;
+
+        let snapshotJadwal = await get(ref(db, 'jadwal_piket'));
+        let jadwalList = [];
+        if(snapshotJadwal.exists()){
+            snapshotJadwal.forEach(child => {
+                jadwalList.push({ id: child.key, ...child.val() });
+            });
+        }
+
+        // 1. Reset Otomatis Hari Minggu (Jam 00:00 ke atas)
+        if (isMinggu && lastReset !== hariIniStr) {
+            jadwalList.forEach(item => {
+                updateData['jadwal_piket/' + item.id + '/selesai'] = false;
+                updateData['jadwal_piket/' + item.id + '/menungguVerifikasi'] = false;
+                updateData['jadwal_piket/' + item.id + '/alpa'] = false;
+                updateData['jadwal_piket/' + item.id + '/foto'] = null;
+                updateData['jadwal_piket/' + item.id + '/fotos'] = null;
+                updateData['jadwal_piket/' + item.id + '/pesanUser'] = null;
+            });
+            updateData['settings/last_reset_date'] = hariIniStr;
+            butuhUpdate = true;
+            console.log("Sistem: Melakukan Reset Mingguan Otomatis");
+        }
+
+        // Hapus otomatis Riwayat Foto > 30 Hari
+        let snapshotRiwayat = await get(ref(db, 'riwayat_foto'));
+        if (snapshotRiwayat.exists()) {
+            let thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+            snapshotRiwayat.forEach(child => {
+                let rf = child.val();
+                if (rf.tanggal && new Date(rf.tanggal) < thirtyDaysAgo) {
+                    updateData['riwayat_foto/' + child.key] = null;
+                    butuhUpdate = true;
+                }
+            });
+        }
+
+        // 5. Cek Deadline Jam 19:00
+        const hariIndo = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+        let namaHariIni = hariIndo[now.getDay()];
+
+        if (jam >= 19) {
+            jadwalList.forEach(item => {
+                if (item.hari === namaHariIni && !item.selesai && !item.menungguVerifikasi && !item.alpa) {
+                    updateData['jadwal_piket/' + item.id + '/alpa'] = true;
+                    butuhUpdate = true;
+                    console.log("Sistem: Tenggat waktu jam 19:00 lewat. Menandai Alpa untuk " + item.nama);
+                }
+            });
+        }
+
+        if (butuhUpdate) {
+            await update(ref(db), updateData);
+        }
+    } catch (e) {
+        console.error("Gagal menjalankan logika otomatis", e);
+    }
+}
+jalankanLogikaOtomatis();
 
 // Notifikasi Toast
 function munculNotif(pesan, warna = "#333") {
@@ -57,16 +131,18 @@ document.addEventListener('DOMContentLoaded', () => {
     let sJadwal = document.getElementById("searchJadwal");
     let fHari = document.getElementById("filterHari");
     let fStatus = document.getElementById("filterStatus");
+    let fKamar = document.getElementById("filterKamar");
     if (sJadwal) sJadwal.addEventListener("input", renderTabel);
     if (fHari) fHari.addEventListener("change", renderTabel);
     if (fStatus) fStatus.addEventListener("change", renderTabel);
+    if (fKamar) fKamar.addEventListener("change", renderTabel);
 });
 
 // Render Tabel Jadwal (Admin View)
 function renderTabel() {
-    let tabelBodi = document.getElementById("tabelBodi");
-    if (!tabelBodi) return;
-    tabelBodi.innerHTML = "";
+    let wadahTabel = document.getElementById("tabelKamarContainer");
+    if (!wadahTabel) return;
+    wadahTabel.innerHTML = "";
     if (!currentUser) return;
     updateStats();
     renderLeaderboard();
@@ -74,10 +150,12 @@ function renderTabel() {
     let searchVal = document.getElementById("searchJadwal") ? document.getElementById("searchJadwal").value.toLowerCase() : "";
     let hariVal = document.getElementById("filterHari") ? document.getElementById("filterHari").value : "Semua";
     let statusVal = document.getElementById("filterStatus") ? document.getElementById("filterStatus").value : "Semua";
+    let kamarVal = document.getElementById("filterKamar") ? document.getElementById("filterKamar").value : "Semua";
 
     let filteredData = dataJadwal.filter(item => {
         let matchSearch = item.nama.toLowerCase().includes(searchVal) || item.tugas.toLowerCase().includes(searchVal);
         let matchHari = (hariVal === "Semua" || item.hari === hariVal);
+        let matchKamar = (kamarVal === "Semua" || item.kamar === kamarVal);
         
         let itemStatus = "Belum";
         if (item.selesai) itemStatus = "Selesai";
@@ -85,7 +163,7 @@ function renderTabel() {
         
         let matchStatus = (statusVal === "Semua" || itemStatus === statusVal);
         
-        return matchSearch && matchHari && matchStatus;
+        return matchSearch && matchHari && matchKamar && matchStatus;
     });
 
     let elEmpty = document.getElementById("tableEmpty");
@@ -93,47 +171,118 @@ function renderTabel() {
         elEmpty.style.display = filteredData.length === 0 ? "block" : "none";
     }
 
-    filteredData.forEach((item) => {
-        let statusHTML = "";
-        let iconInfoTampil = `<button class="btn-info-icon" onclick="bukaInfo('${item.id}')" title="Lihat Info Akun">i</button>`;
-        let iconEditTampil = `<button class="btn-info-icon" style="background:rgba(245,158,11,0.1); color:var(--orange); border-color:rgba(245,158,11,0.3);" onclick="editData('${item.id}')" title="Edit Jadwal">✏</button>`;
-
-        if (item.selesai) {
-            statusHTML = `
-                <span class="status-selesai">✅ Selesai</span>
-                <button class="btn-lihat" onclick="lihatBuktiAdmin('${item.id}')">📷 Lihat Bukti</button>
-                <button class="btn-delete" onclick="hapusData('${item.id}')">🗑 Hapus</button>
-            `;
-        } else if (item.menungguVerifikasi) {
-            statusHTML = `
-                <span class="status-belum" style="background:rgba(245,158,11,0.1); color:var(--orange);">⏳ Menunggu</span>
-                <button class="btn-lihat" style="background:linear-gradient(135deg,var(--orange),#ea580c); color:white; border:none;" onclick="lihatBuktiAdmin('${item.id}')">🔍 Cek Bukti</button>
-                <button class="btn-delete" onclick="hapusData('${item.id}')">🗑 Hapus</button>
-            `;
-        } else {
-            let teksTombolPesan = item.pesanAdmin ? "✏ Edit Teguran" : "⚠ Beri Teguran";
-            let teguranCount = item.teguranCount || 0;
-            statusHTML = `
-                <span class="status-belum">❌ Belum</span>
-                <button class="btn-wa" onclick="kirimWA('${item.id}')">💬 Kirim WA</button>
-                <button class="btn-pesan" onclick="kirimPesanKeUser('${item.id}')">${teksTombolPesan} (${teguranCount})</button>
-                <button class="btn-delete" onclick="hapusData('${item.id}')">🗑 Hapus</button>
-            `;
-        }
-
-        let warningRowStyle = "";
-        if (!item.selesai && !item.menungguVerifikasi && (item.teguranCount || 0) >= 3) {
-            warningRowStyle = "border-left: 4px solid var(--red); background: rgba(239,68,68,0.05);";
-        }
-
-        let baris = `<tr style="${warningRowStyle}">
-            <td>${item.hari}</td>
-            <td style="white-space: nowrap;">${item.nama} ${iconInfoTampil} ${iconEditTampil}</td>
-            <td>${item.tugas}</td>
-            <td style="vertical-align: middle;">${statusHTML}</td>
-        </tr>`;
-        tabelBodi.innerHTML += baris;
+    // Mengelompokkan data berdasarkan Kamar
+    let kamarGroups = {};
+    filteredData.forEach(item => {
+        let namaKamar = item.kamar || "Belum ada kamar";
+        if (!kamarGroups[namaKamar]) kamarGroups[namaKamar] = [];
+        kamarGroups[namaKamar].push(item);
     });
+
+    // Sort key agar Kamar 1, Kamar 2 berurutan
+    let sortedKamarKeys = Object.keys(kamarGroups).sort();
+
+    // Build card grid
+    let gridHTML = '<div class="kamar-grid">';
+
+    sortedKamarKeys.forEach(namaKamar => {
+        let items = kamarGroups[namaKamar];
+        let selesaiCount = items.filter(i => i.selesai).length;
+        let allDone = items.length > 0 && selesaiCount === items.length;
+        let hasPending = items.some(i => i.menungguVerifikasi && !i.selesai);
+
+        // Status badge for card header
+        let cardBadge = '';
+        if (allDone) {
+            cardBadge = '<div class="card-badge-done"><span style="font-size:10px;">●</span> Done</div>';
+        } else if (hasPending) {
+            cardBadge = '<div class="card-badge-status" style="background:rgba(217,119,6,0.15); color:#d97706;"><span style="font-size:10px;">●</span> Pending</div>';
+        } else {
+            cardBadge = '<div class="card-badge-status"><span style="font-size:10px;">●</span> Status</div>';
+        }
+
+        let cardHTML = `
+        <div class="kamar-card">
+            <div class="kamar-card-header">
+                <div class="kamar-card-title">
+                    <div class="kamar-card-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4v16"></path><path d="M2 8h18a2 2 0 0 1 2 2v10"></path><path d="M2 17h20"></path><path d="M6 8v9"></path></svg>
+                    </div>
+                    ${namaKamar}
+                </div>
+                ${cardBadge}
+            </div>
+            <div class="kamar-card-subheader">
+                <span>Nama Penghuni</span>
+                <span>Tugas Kebersihan</span>
+            </div>
+        `;
+
+        items.forEach(item => {
+            // Status badge per row
+            let statusBadge = '';
+            if (item.alpa) {
+                statusBadge = '<span class="row-badge belum" style="background:rgba(220,38,38,0.1); color:#dc2626; border-color:rgba(220,38,38,0.2);">Alpa (Terlambat)</span>';
+            } else if (item.selesai) {
+                statusBadge = '<span class="row-badge done">Selesai</span>';
+            } else if (item.menungguVerifikasi) {
+                statusBadge = '<span class="row-badge pending">Menunggu</span>';
+            } else {
+                statusBadge = '<span class="row-badge belum">Belum</span>';
+            }
+
+            // Action buttons (Restore original logic)
+            let editBtn = `<button class="kamar-action-btn" onclick="editData('${item.id}')" title="Edit"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>`;
+            let deleteBtn = `<button class="kamar-action-btn" onclick="hapusData('${item.id}')" title="Hapus" style="color:#ef4444;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>`;
+            let infoBtn = `<button class="kamar-action-btn" onclick="bukaInfo('${item.id}')" title="Detail Akun"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg></button>`;
+            
+            let extraBtn = '';
+
+            if (item.selesai) {
+                extraBtn = `<button onclick="lihatBuktiAdmin('${item.id}')" style="background:rgba(6,182,212,0.1); color:#06b6d4; border:1px solid rgba(6,182,212,0.2); padding:4px 10px; border-radius:6px; font-size:11px; font-weight:600; cursor:pointer;">Lihat Bukti</button>`;
+            } else if (item.menungguVerifikasi) {
+                extraBtn = `<button onclick="lihatBuktiAdmin('${item.id}')" style="background:rgba(245,158,11,0.1); color:#f59e0b; border:1px solid rgba(245,158,11,0.2); padding:4px 10px; border-radius:6px; font-size:11px; font-weight:600; cursor:pointer;">Cek Bukti</button>`;
+            } else {
+                extraBtn = `
+                <button onclick="kirimWA('${item.id}')" style="background:#22c55e; color:white; border:none; padding:4px 10px; border-radius:6px; font-size:11px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:4px;">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg> WA
+                </button>
+                <button onclick="kirimPesanKeUser('${item.id}')" style="background:#f97316; color:white; border:none; padding:4px 10px; border-radius:6px; font-size:11px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:4px;">
+                    Teguran (${item.teguranCount || 0})
+                </button>
+                `;
+            }
+
+            cardHTML += `
+            <div class="kamar-row" style="flex-direction:column; align-items:flex-start; gap:12px;">
+                <div style="display:flex; width:100%; gap:10px; align-items:center;">
+                    <div class="kamar-row-info" style="flex:1;">
+                        <div style="display:flex; align-items:center; gap:6px;">
+                            <div class="kamar-row-name" style="font-weight:600; font-size:14px;">${item.nama}</div>
+                            ${infoBtn}
+                            ${editBtn}
+                            ${deleteBtn}
+                        </div>
+                        <div style="margin-top:4px;">${statusBadge}</div>
+                    </div>
+                </div>
+                
+                <div style="display:flex; width:100%; justify-content:space-between; align-items:center; background:var(--surface2); padding:8px 12px; border-radius:8px; border:1px solid var(--border);">
+                    <div class="kamar-row-task" style="flex:1; margin-right:12px; font-size:12px; color:var(--text);">${item.tugas}</div>
+                    <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
+                        ${extraBtn}
+                    </div>
+                </div>
+            </div>
+            `;
+        });
+
+        cardHTML += `</div>`;
+        gridHTML += cardHTML;
+    });
+
+    gridHTML += '</div>';
+    wadahTabel.innerHTML = gridHTML;
 }
 
 // Render Leaderboard
@@ -189,6 +338,10 @@ window.tutupBroadcast = function() {
 }
 
 window.kirimBroadcast = function() {
+    if (dataJadwal.length === 0) {
+        munculNotif("Belum ada mahasiswa yang terdaftar! Tidak bisa mengirim pengumuman.", "#ff9800");
+        return;
+    }
     let teks = document.getElementById("teksBroadcast").value.trim();
     if (!teks) {
         munculNotif("Pengumuman tidak boleh kosong!", "#ff9800");
@@ -236,13 +389,14 @@ onValue(ref(db, 'jadwal_piket'), (snapshot) => {
 // Admin: Tambah Data Jadwal
 window.tambahData = function() {
     let hari     = document.getElementById("hari").value;
+    let kamar    = document.getElementById("kamar").value;
     let nama     = document.getElementById("nama").value.trim();
     let nowaRaw  = document.getElementById("nowa").value.replace(/[^0-9]/g, '');
     let passAkun = document.getElementById("passAkunUser").value.trim();
     let tugas    = document.getElementById("tugas").value.trim();
 
-    if (!hari || !nama || !nowaRaw || !passAkun || !tugas) {
-        munculNotif("Harap masukkan semua inputan ", "#ff9800");
+    if (!hari || !kamar || !nama || !nowaRaw || !passAkun || !tugas) {
+        munculNotif("Harap masukkan semua inputan (Termasuk Kamar)", "#ff9800");
         return;
     }
 
@@ -252,10 +406,11 @@ window.tambahData = function() {
     }
 
     push(ref(db, 'jadwal_piket'), {
-        hari: hari, nama: nama, nowa: nowaFormat, password: passAkun, tugas: tugas,
+        hari: hari, kamar: kamar, nama: nama, nowa: nowaFormat, password: passAkun, tugas: tugas,
         selesai: false, foto: "", fotos: [], pesanAdmin: "", pesanUser: "", pesanDibaca: false, skorSelesai: 0, teguranCount: 0
     }).then(() => {
         document.getElementById("hari").value = "";
+        document.getElementById("kamar").value = "";
         document.getElementById("nama").value = "";
         document.getElementById("nowa").value = "";
         document.getElementById("passAkunUser").value = "";
@@ -292,6 +447,7 @@ window.editData = function(id) {
     let data = dataJadwal.find(d => d.id === id);
     document.getElementById("editId").value = id;
     document.getElementById("editHari").value = data.hari;
+    if (data.kamar) document.getElementById("editKamar").value = data.kamar;
     document.getElementById("editNama").value = data.nama;
     document.getElementById("editNowa").value = data.nowa.startsWith("62") ? "0" + data.nowa.substring(2) : data.nowa;
     document.getElementById("editPassword").value = data.password;
@@ -306,19 +462,20 @@ window.tutupEdit = function() {
 window.simpanEdit = function() {
     let id = document.getElementById("editId").value;
     let hari = document.getElementById("editHari").value;
+    let kamar = document.getElementById("editKamar").value;
     let nama = document.getElementById("editNama").value.trim();
     let nowaRaw = document.getElementById("editNowa").value.replace(/[^0-9]/g, '');
     let passAkun = document.getElementById("editPassword").value.trim();
     let tugas = document.getElementById("editTugas").value.trim();
 
-    if (!nama || !nowaRaw || !passAkun || !tugas) {
+    if (!nama || !nowaRaw || !passAkun || !tugas || !kamar) {
         munculNotif("Semua data harus diisi!", "#ff9800");
         return;
     }
     let nowaFormat = nowaRaw.startsWith("0") ? "62" + nowaRaw.substring(1) : nowaRaw;
 
     update(ref(db, 'jadwal_piket/' + id), {
-        hari: hari, nama: nama, nowa: nowaFormat, password: passAkun, tugas: tugas
+        hari: hari, kamar: kamar, nama: nama, nowa: nowaFormat, password: passAkun, tugas: tugas
     }).then(() => {
         munculNotif("Jadwal berhasil diupdate!", "#28a745");
         tutupEdit();
@@ -327,6 +484,10 @@ window.simpanEdit = function() {
 
 // Reset Mingguan
 window.resetMingguan = function() {
+    if (dataJadwal.length === 0) {
+        munculNotif("Belum ada jadwal/mahasiswa yang terdaftar untuk di-reset!", "#ff9800");
+        return;
+    }
     if (confirm("Yakin ingin reset semua jadwal menjadi 'Belum'? (Foto dan status selesai akan direset)")) {
         let updates = {};
         dataJadwal.forEach(item => {
@@ -403,15 +564,48 @@ window.tutupBukti = function() {
     document.getElementById("modalBukti").style.display = "none";
 }
 
-window.terimaBukti = function() {
+window.terimaBukti = async function() {
     let id = document.getElementById("actionKonfirmasi").dataset.id;
     let data = dataJadwal.find(d => d.id === id);
     let skorBaru = (data.skorSelesai || 0) + 1;
-    update(ref(db, 'jadwal_piket/' + id), { selesai: true, menungguVerifikasi: false, skorSelesai: skorBaru, teguranCount: 0 })
-        .then(() => {
-            munculNotif("Bukti diterima! Status menjadi Selesai.", "#28a745");
-            tutupBukti();
+    
+    // Simple fast hash function
+    function getHash(str) {
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            hash = ((hash << 5) - hash) + str.charCodeAt(i);
+            hash = hash & hash;
+        }
+        return Math.abs(hash).toString();
+    }
+
+    let updates = {};
+    updates['jadwal_piket/' + id + '/selesai'] = true;
+    updates['jadwal_piket/' + id + '/menungguVerifikasi'] = false;
+    updates['jadwal_piket/' + id + '/skorSelesai'] = skorBaru;
+    updates['jadwal_piket/' + id + '/teguranCount'] = 0;
+
+    // Simpan Hash Foto ke Riwayat untuk Anti-Cheat & Simpan Visual ke Galeri Riwayat Foto
+    let nowStr = new Date().toISOString();
+    if (data.fotos && data.fotos.length > 0) {
+        data.fotos.forEach(f => { 
+            updates['settings/riwayat_foto_hashes/' + getHash(f)] = true; 
+            let newRef = push(ref(db, 'riwayat_foto')).key;
+            updates['riwayat_foto/' + newRef] = { nama: data.nama, kamar: data.kamar, tugas: data.tugas, tanggal: nowStr, foto: f };
         });
+    } else if (data.foto) {
+        updates['settings/riwayat_foto_hashes/' + getHash(data.foto)] = true;
+        let newRef = push(ref(db, 'riwayat_foto')).key;
+        updates['riwayat_foto/' + newRef] = { nama: data.nama, kamar: data.kamar, tugas: data.tugas, tanggal: nowStr, foto: data.foto };
+    }
+
+    try {
+        await update(ref(db), updates);
+        munculNotif("Bukti diterima! Status menjadi Selesai & Foto masuk riwayat.", "#28a745");
+        tutupBukti();
+    } catch (e) {
+        munculNotif("Gagal memproses data", "#dc3545");
+    }
 }
 
 window.tolakBukti = function() {
@@ -426,12 +620,66 @@ window.tolakBukti = function() {
             selesai: false, 
             pesanAdmin: "BUKTI DITOLAK: " + alasan,
             pesanDibaca: false,
-            teguranCount: currentTeguran + 1
+            teguranCount: currentTeguran + 1,
+            foto: null, // Hapus foto agar user kirim ulang
+            fotos: null
         }).then(() => {
-            munculNotif("Bukti ditolak. User akan diberitahu.", "#dc3545");
+            munculNotif("Bukti ditolak. User harus mengirim ulang foto.", "#dc3545");
             tutupBukti();
         });
     }
+}
+
+// Buka Galeri Riwayat Foto
+window.bukaRiwayatFoto = async function() {
+    let wadah = document.getElementById("galeriRiwayatList");
+    let msgKosong = document.getElementById("galeriRiwayatKosong");
+    wadah.innerHTML = "";
+    msgKosong.style.display = "none";
+
+    try {
+        munculNotif("Memuat galeri...", "#17a2b8");
+        let snapshot = await get(ref(db, 'riwayat_foto'));
+        if (!snapshot.exists()) {
+            msgKosong.style.display = "block";
+        } else {
+            let dataArr = [];
+            snapshot.forEach(child => {
+                dataArr.push({ id: child.key, ...child.val() });
+            });
+            
+            // Sort by Date Descending (Terbaru di atas)
+            dataArr.sort((a,b) => new Date(b.tanggal) - new Date(a.tanggal));
+
+            dataArr.forEach(item => {
+                let dateObj = new Date(item.tanggal);
+                let dateStr = dateObj.toLocaleDateString('id-ID', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+                
+                let card = `
+                    <div style="background:var(--surface2); border:1px solid var(--border); border-radius:12px; overflow:hidden;">
+                        <img src="${item.foto}" style="width:100%; height:160px; object-fit:cover; display:block;" alt="Bukti Foto">
+                        <div style="padding:12px;">
+                            <div style="font-size:14px; font-weight:700; color:var(--text);">${item.nama}</div>
+                            <div style="font-size:12px; color:var(--text2); margin-top:4px;">${item.tugas}</div>
+                            <div style="font-size:11px; color:var(--text2); margin-top:8px; display:flex; justify-content:space-between;">
+                                <span>Kmr: ${item.kamar}</span>
+                                <span>${dateStr}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                wadah.innerHTML += card;
+            });
+        }
+        document.getElementById("modalRiwayatFoto").style.display = "flex";
+    } catch (e) {
+        munculNotif("Gagal memuat galeri.", "#dc3545");
+        console.error(e);
+    }
+}
+
+window.tutupRiwayatFoto = function() {
+    document.getElementById("modalRiwayatFoto").style.display = "none";
 }
 
 // Export CSV
@@ -554,3 +802,70 @@ window.exportPDF = function() {
     doc.save("jadwal_piket_asrama.pdf");
     munculNotif("File PDF berhasil didownload!", "#28a745");
 }
+
+// Fitur 4: Import Excel
+document.getElementById('inputExcelData').addEventListener('change', function(e) {
+    let file = e.target.files[0];
+    if (!file) return;
+    
+    // Notifikasi loading
+    munculNotif("Membaca file Excel...", "#17a2b8");
+
+    let reader = new FileReader();
+    reader.onload = function(evt) {
+        try {
+            let data = evt.target.result;
+            let workbook = XLSX.read(data, {type: 'binary'});
+            let firstSheetName = workbook.SheetNames[0];
+            let worksheet = workbook.Sheets[firstSheetName];
+            let jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+            if(jsonData.length === 0) {
+                munculNotif("File Excel kosong atau format salah!", "#dc3545");
+                return;
+            }
+
+            let berhasil = 0;
+            jsonData.forEach(row => {
+                let nama = row.Nama || row.nama || row.NAMA;
+                let kamar = row.Kamar || row.kamar || row.KAMAR;
+                let nowa = row.No_WA || row.NoWA || row.no_wa || row.nowa || row['No WA'] || row['NO WA'];
+                let hari = row.Hari || row.hari || row.HARI;
+                let tugas = row.Tugas || row.tugas || row.TUGAS;
+                let password = row.Password || row.password || "123456";
+
+                if (nama && nowa && hari && tugas) {
+                    let formattedNowa = String(nowa).trim();
+                    if (formattedNowa.startsWith("0")) {
+                        formattedNowa = "62" + formattedNowa.substring(1);
+                    }
+
+                    push(ref(db, 'jadwal_piket'), {
+                        nama: nama,
+                        kamar: kamar ? String(kamar) : "Belum dipilih",
+                        tugas: tugas,
+                        hari: hari,
+                        nowa: formattedNowa,
+                        password: String(password),
+                        selesai: false,
+                        menungguVerifikasi: false,
+                        alpa: false
+                    });
+                    berhasil++;
+                }
+            });
+
+            if (berhasil > 0) {
+                munculNotif(`Berhasil import ${berhasil} jadwal dari Excel!`, "#28a745");
+            } else {
+                munculNotif("Tidak ada data valid yang bisa diimport. Pastikan kolom Nama, No WA, Hari, Tugas ada.", "#ff9800");
+            }
+        } catch (err) {
+            console.error(err);
+            munculNotif("Gagal membaca Excel. Pastikan file valid.", "#dc3545");
+        } finally {
+            e.target.value = ""; // Reset input
+        }
+    };
+    reader.readAsBinaryString(file);
+});
