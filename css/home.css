@@ -1,0 +1,48 @@
+/* ===========================
+   HOME.CSS - Halaman Home (Pilih Role)
+   =========================== */
+.home-wrapper { text-align:center; width:100%; max-width:480px; }
+.home-header { margin-bottom:32px; }
+.logo-icon { margin-bottom:12px; display:inline-block; animation:pulse 3s infinite; }
+@keyframes pulse { 0%,100%{transform:scale(1);} 50%{transform:scale(1.05);} }
+.home-header h1 {
+    font-size:26px; font-weight:800;
+    background:linear-gradient(135deg,#6C63FF,#3B82F6,#06b6d4);
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+    background-clip:text; margin-bottom:6px;
+}
+.home-subtitle { color:var(--text2); font-size:14px; }
+.role-cards { display:flex; flex-direction:column; gap:14px; margin-bottom:28px; }
+.role-card {
+    position:relative; overflow:hidden;
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:var(--radius); padding:22px 18px;
+    cursor:pointer; text-align:left;
+    transition:all .3s ease; -webkit-user-select:none; user-select:none;
+}
+.role-card:active { transform:scale(0.98); }
+.role-card-glow {
+    position:absolute; top:-50%; right:-50%; width:200%; height:200%;
+    background:radial-gradient(circle,rgba(108,99,255,0.05) 0%,transparent 60%);
+    opacity:0; transition:opacity .3s;
+}
+.role-card:active .role-card-glow { opacity:1; }
+.role-card-admin .role-card-glow { background:radial-gradient(circle,rgba(249,115,22,0.05) 0%,transparent 60%); }
+.role-icon { margin-bottom:12px; }
+.role-icon svg { width:44px; height:44px; }
+.role-card-user .role-icon { color:var(--accent); }
+.role-card-admin .role-icon { color:var(--orange); }
+.role-card h3 { font-size:18px; font-weight:700; margin-bottom:6px; }
+.role-card p { font-size:13px; color:var(--text2); line-height:1.5; }
+.role-card-arrow {
+    position:absolute; right:18px; top:50%; transform:translateY(-50%);
+    color:var(--text2); opacity:0.5;
+}
+.home-footer-text { color:var(--text2); font-size:12px; opacity:0.5; }
+
+@media(min-width:601px) {
+    .home-header h1 { font-size:32px; }
+    .role-card:hover { transform:translateY(-3px); border-color:rgba(108,99,255,0.25); box-shadow:0 12px 30px rgba(0,0,0,0.3); }
+    .role-card-admin:hover { border-color:rgba(249,115,22,0.25); }
+    .role-card:hover .role-card-glow { opacity:1; }
+}

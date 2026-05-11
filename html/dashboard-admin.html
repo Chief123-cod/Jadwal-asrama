@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Admin | GH-Clean Schedule</title>
+    <meta name="description" content="Dashboard admin untuk manajemen jadwal piket asrama">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/global.css">
+    <link rel="stylesheet" href="../css/dashboard.css">
+    <link rel="stylesheet" href="../css/modal.css">
+    <script>if(localStorage.getItem('theme') === 'light') document.documentElement.classList.add('light-mode');</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+</head>
+<body>
+
+<div id="toastBox"></div>
+
+<div class="bg-particles">
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+</div>
+
+<div class="page" id="appPage">
+    <div class="dashboard-wrapper">
+        <div class="dash-header">
+            <div class="dash-header-left">
+                <div class="dash-logo">
+                    <svg width="36" height="36" viewBox="0 0 48 48" fill="none">
+                        <rect width="48" height="48" rx="12" fill="url(#logoGrad2)"/>
+                        <path d="M14 24L21 31L34 18" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                        <defs><linearGradient id="logoGrad2" x1="0" y1="0" x2="48" y2="48"><stop stop-color="#6C63FF"/><stop offset="1" stop-color="#3B82F6"/></linearGradient></defs>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="dash-title">Dashboard Admin</h1>
+                    <p class="dash-subtitle" id="dashGreeting">Selamat datang, Admin 👋</p>
+                </div>
+            </div>
+            <div style="display:flex; gap:8px; align-items:center;">
+                <button class="btn-info-icon" style="width:36px; height:36px; background:var(--surface); border:1px solid var(--border); font-size:16px;" onclick="toggleTheme()" title="Ganti Tema">🌓</button>
+                <button class="btn-info-icon" style="width:36px; height:36px; background:var(--surface); border:1px solid var(--border); font-size:16px;" onclick="bukaBroadcast()" title="Broadcast Pengumuman">📢</button>
+                <button class="btn-logout" onclick="logoutSistem()" id="btnLogout" style="padding:8px 10px;" title="Keluar">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style="margin:0;"><path d="M9 21H5C3.89 21 3 20.1 3 19V5C3 3.89 3.89 3 5 3H9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><polyline points="16,17 21,12 16,7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><line x1="21" y1="12" x2="9" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                </button>
+            </div>
+        </div>
+
+        <div class="stats-row" id="statsRow">
+            <div class="stat-card stat-total">
+                <div class="stat-icon">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 21V10a2 2 0 0 0-2-2h-2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 21V14a2 2 0 0 1 2-2h2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><line x1="2" y1="21" x2="22" y2="21" stroke="currentColor" stroke-width="2"/></svg>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-value" id="statTotal">0</span>
+                    <span class="stat-label">Total Jadwal</span>
+                </div>
+            </div>
+            <div class="stat-card stat-done">
+                <div class="stat-icon">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><polyline points="22,4 12,14.01 9,11.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-value" id="statDone">0</span>
+                    <span class="stat-label">Selesai</span>
+                </div>
+            </div>
+            <div class="stat-card stat-pending">
+                <div class="stat-icon">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none"/><polyline points="12,6 12,12 16,14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-value" id="statPending">0</span>
+                    <span class="stat-label">Belum</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="leaderboard-section" style="background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:16px; margin-bottom:20px;">
+            <h3 style="font-size:15px; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
+                <span style="font-size:18px;">🏆</span> Leaderboard Kepatuhan
+            </h3>
+            <div id="leaderboardList" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(140px, 1fr)); gap:10px;">
+                <!-- Diisi oleh JS -->
+            </div>
+        </div>
+
+        <div id="adminSection" class="admin-panel" style="display: block;">
+            <div class="admin-panel-header">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+                <h3>Tambah Jadwal Baru</h3>
+            </div>
+            <div class="admin-form-grid">
+                <div class="form-group">
+                    <label for="hari">Hari</label>
+                    <select id="hari">
+                        <option value="" disabled selected>Pilih hari...</option>
+                        <option value="Senin">Senin</option>
+                        <option value="Selasa">Selasa</option>
+                        <option value="Rabu">Rabu</option>
+                        <option value="Kamis">Kamis</option>
+                        <option value="Jumat">Jumat</option>
+                        <option value="Sabtu">Sabtu</option>
+                        <option value="Minggu">Minggu</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="nama">Username</label>
+                    <input type="text" id="nama" placeholder="Nama penghuni">
+                </div>
+                <div class="form-group">
+                    <label for="nowa">No. Handphone</label>
+                    <input type="text" inputmode="numeric" id="nowa" placeholder="08xxxxxxxxxx">
+                </div>
+                <div class="form-group">
+                    <label for="passAkunUser">Password</label>
+                    <input type="text" id="passAkunUser" placeholder="Password login user">
+                </div>
+                <div class="form-group form-group-full">
+                    <label for="tugas">Tugas</label>
+                    <input type="text" id="tugas" placeholder="Deskripsi tugas piket">
+                </div>
+            </div>
+            <button class="btn-save" onclick="tambahData()" id="btnSaveSchedule">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+                <span>Simpan Jadwal</span>
+            </button>
+        </div>
+
+        <div class="table-section">
+            <div class="table-header-bar" style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px; align-items:center;">
+                <h3 style="flex-shrink:0; margin:0;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2" fill="none"/><line x1="16" y1="2" x2="16" y2="6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="8" y1="2" x2="8" y2="6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="10" x2="21" y2="10" stroke="currentColor" stroke-width="2"/></svg>
+                    Jadwal Piket
+                </h3>
+                <div style="display:flex; gap:8px; flex-wrap:wrap; flex-grow:1; justify-content:flex-end;">
+                    <input type="text" id="searchJadwal" placeholder="Cari nama..." style="padding:6px 10px; border-radius:6px; border:1px solid var(--border); background:var(--surface2); color:var(--text); font-size:12px; max-width:120px; outline:none;">
+                    <select id="filterHari" style="padding:6px 10px; border-radius:6px; border:1px solid var(--border); background:var(--surface2); color:var(--text); font-size:12px; outline:none;">
+                        <option value="Semua">Semua Hari</option>
+                        <option value="Senin">Senin</option>
+                        <option value="Selasa">Selasa</option>
+                        <option value="Rabu">Rabu</option>
+                        <option value="Kamis">Kamis</option>
+                        <option value="Jumat">Jumat</option>
+                        <option value="Sabtu">Sabtu</option>
+                        <option value="Minggu">Minggu</option>
+                    </select>
+                    <select id="filterStatus" style="padding:6px 10px; border-radius:6px; border:1px solid var(--border); background:var(--surface2); color:var(--text); font-size:12px; outline:none;">
+                        <option value="Semua">Semua Status</option>
+                        <option value="Selesai">Selesai</option>
+                        <option value="Menunggu">Menunggu</option>
+                        <option value="Belum">Belum</option>
+                    </select>
+                    <button class="btn-lihat" style="width:auto; padding:6px 12px; margin:0;" onclick="exportCSV()" title="Export ke CSV">📥 CSV</button>
+                    <button class="btn-lihat" style="width:auto; padding:6px 12px; margin:0; background:rgba(239,68,68,0.1); color:var(--red); border:1px solid rgba(239,68,68,0.15);" onclick="exportPDF()" title="Export ke PDF">📄 PDF</button>
+                    <button class="btn-delete" style="width:auto; padding:6px 12px; margin:0;" onclick="resetMingguan()" title="Reset semua status menjadi Belum">🔄 Reset</button>
+                </div>
+            </div>
+            <div class="table-wrapper">
+                <table id="tabelData">
+                    <thead>
+                        <tr>
+                            <th>Hari</th>
+                            <th>Username</th>
+                            <th>Tugas</th>
+                            <th style="text-align: center;">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelBodi"></tbody>
+                </table>
+                <div class="table-empty" id="tableEmpty">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><rect x="9" y="3" width="6" height="4" rx="1" stroke="currentColor" stroke-width="1.5"/><line x1="9" y1="12" x2="15" y2="12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="9" y1="16" x2="13" y2="16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                    <p>Belum ada jadwal piket</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Info Akun User -->
+<div id="modalInfoAkun" class="modal-overlay">
+    <div class="modal-box">
+        <div class="modal-header-bar">
+            <h3>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="2" fill="none"/><path d="M4 21C4 16.58 7.58 13 12 13C16.42 13 20 16.58 20 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                Detail Akun
+            </h3>
+            <button class="modal-close-x" onclick="tutupInfo()">✕</button>
+        </div>
+        <div class="info-box-data">
+            <div class="info-row">
+                <span class="info-label">Username</span>
+                <span class="info-value" id="infoNama"></span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Nomor HP</span>
+                <span class="info-value" id="infoNomor"></span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Password</span>
+                <span class="info-value" id="infoPassword"></span>
+            </div>
+        </div>
+        <button class="btn-modal-close" onclick="tutupInfo()">Tutup</button>
+    </div>
+</div>
+
+<!-- Modal: Edit Jadwal -->
+<div id="modalEdit" class="modal-overlay">
+    <div class="modal-box">
+        <div class="modal-header-bar">
+            <h3>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Edit Jadwal
+            </h3>
+            <button class="modal-close-x" onclick="tutupEdit()">✕</button>
+        </div>
+        <div class="info-box-data">
+            <input type="hidden" id="editId">
+            <div class="form-group" style="margin-bottom:12px;">
+                <label for="editHari">Hari</label>
+                <select id="editHari">
+                    <option value="Senin">Senin</option>
+                    <option value="Selasa">Selasa</option>
+                    <option value="Rabu">Rabu</option>
+                    <option value="Kamis">Kamis</option>
+                    <option value="Jumat">Jumat</option>
+                    <option value="Sabtu">Sabtu</option>
+                    <option value="Minggu">Minggu</option>
+                </select>
+            </div>
+            <div class="form-group" style="margin-bottom:12px;">
+                <label for="editNama">Username</label>
+                <input type="text" id="editNama">
+            </div>
+            <div class="form-group" style="margin-bottom:12px;">
+                <label for="editNowa">No. Handphone</label>
+                <input type="text" inputmode="numeric" id="editNowa">
+            </div>
+            <div class="form-group" style="margin-bottom:12px;">
+                <label for="editPassword">Password</label>
+                <input type="text" id="editPassword">
+            </div>
+            <div class="form-group" style="margin-bottom:12px;">
+                <label for="editTugas">Tugas</label>
+                <input type="text" id="editTugas">
+            </div>
+        </div>
+        <button class="btn-save" style="width:calc(100% - 32px); margin:0 16px 16px;" onclick="simpanEdit()">Simpan Perubahan</button>
+    </div>
+</div>
+
+<!-- Modal: Bukti Foto -->
+<div id="modalBukti" class="modal-overlay">
+    <div class="modal-box modal-box-wide">
+        <div class="modal-header-bar">
+            <h3>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2" fill="none"/><circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/><polyline points="21,15 16,10 5,21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Bukti Foto
+            </h3>
+            <button class="modal-close-x" onclick="tutupBukti()">✕</button>
+        </div>
+        <div class="pesan-user-teks" id="teksPesanUser"></div>
+        <div id="containerBuktiFoto"></div>
+        
+        <div id="actionKonfirmasi" style="display:flex; gap:10px; padding:0 16px 16px;">
+            <button class="btn-save" style="flex:1; margin:0;" onclick="terimaBukti()">✅ Terima</button>
+            <button class="btn-delete" style="flex:1; margin:0; padding:13px; font-size:14px; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.2);" onclick="tolakBukti()">❌ Tolak</button>
+        </div>
+        <button class="btn-modal-close" id="btnTutupBukti" onclick="tutupBukti()">Tutup</button>
+    </div>
+</div>
+
+<!-- Modal Broadcast -->
+<div id="modalBroadcast" class="modal-overlay">
+    <div class="modal-box">
+        <div class="modal-header-bar">
+            <h3>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" stroke-width="2"/><path d="M12 8V12L15 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                Broadcast Pengumuman
+            </h3>
+            <button class="modal-close-x" onclick="tutupBroadcast()">✕</button>
+        </div>
+        <div style="padding:16px;">
+            <label style="font-size:12px; font-weight:600; color:var(--text2); display:block; margin-bottom:6px;">Isi Pengumuman (Tampil di semua dashboard user)</label>
+            <textarea id="teksBroadcast" rows="4" placeholder="Ketik pengumuman di sini..." style="width:100%; padding:10px; border-radius:6px; border:1px solid var(--border); background:var(--surface2); color:var(--text); font-family:inherit; margin-bottom:16px; outline:none; resize:vertical;"></textarea>
+            
+            <button class="btn-save" style="width:100%; margin:0;" onclick="kirimBroadcast()">Kirim Pengumuman</button>
+            <button class="btn-delete" style="width:100%; margin:10px 0 0 0; padding:10px;" onclick="hapusBroadcast()">Hapus Pengumuman Aktif</button>
+        </div>
+    </div>
+</div>
+
+<script type="module" src="../js/script-dashboard-admin.js"></script>
+
+</body>
+</html>

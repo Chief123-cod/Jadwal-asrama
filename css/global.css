@@ -1,0 +1,83 @@
+/* ===========================
+   GLOBAL.CSS - Base Styles, Variables, Particles, Toast
+   =========================== */
+:root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #232733;
+    --border: rgba(255,255,255,0.08);
+    --text: #e4e4e7;
+    --text2: #9ca3af;
+    --accent: #6C63FF;
+    --accent2: #3B82F6;
+    --green: #22c55e;
+    --red: #ef4444;
+    --orange: #f59e0b;
+    --cyan: #06b6d4;
+    --radius: 14px;
+    --radius-sm: 10px;
+}
+
+:root.light-mode {
+    --bg: #f8fafc;
+    --surface: #ffffff;
+    --surface2: #f1f5f9;
+    --border: rgba(0,0,0,0.1);
+    --text: #0f172a;
+    --text2: #64748b;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+    font-family:'Inter',system-ui,-apple-system,sans-serif;
+    background:var(--bg); color:var(--text);
+    min-height:100vh; min-height:100dvh;
+    overflow-x:hidden; -webkit-tap-highlight-color:transparent;
+}
+
+/* Particles */
+.bg-particles { position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden; }
+.particle { position:absolute; border-radius:50%; background:var(--accent); opacity:0.06; animation:floatP 25s infinite ease-in-out; }
+.particle:nth-child(1){width:200px;height:200px;top:-60px;left:-60px;}
+.particle:nth-child(2){width:150px;height:150px;bottom:5%;right:-40px;animation-delay:-5s;background:var(--accent2);}
+.particle:nth-child(3){width:100px;height:100px;top:40%;left:60%;animation-delay:-10s;background:var(--cyan);}
+.particle:nth-child(4){width:180px;height:180px;bottom:-60px;left:10%;animation-delay:-3s;}
+.particle:nth-child(5){width:120px;height:120px;top:15%;right:10%;animation-delay:-7s;background:var(--green);opacity:0.04;}
+.particle:nth-child(6){width:80px;height:80px;top:55%;left:5%;animation-delay:-12s;background:var(--orange);opacity:0.04;}
+@keyframes floatP { 0%,100%{transform:translateY(0) scale(1);} 50%{transform:translateY(-30px) scale(1.08);} }
+
+/* Pages */
+.page {
+    position:relative; z-index:1;
+    min-height:100vh; min-height:100dvh;
+    display:flex; justify-content:center; align-items:center;
+    padding:16px; animation:fadeUp .4s ease;
+}
+@keyframes fadeUp { from{opacity:0;transform:translateY(16px);} to{opacity:1;transform:translateY(0);} }
+
+/* Toast */
+#toastBox {
+    position:fixed; top:12px; left:50%; transform:translateX(-50%);
+    z-index:9999; display:flex; flex-direction:column;
+    gap:8px; width:calc(100% - 32px); max-width:340px; pointer-events:none;
+}
+.toast {
+    background:var(--surface); color:var(--text);
+    padding:12px 16px; border-radius:var(--radius-sm);
+    border:1px solid var(--border);
+    box-shadow:0 8px 20px rgba(0,0,0,0.4);
+    font-size:13px; font-weight:600; text-align:center;
+    animation:toastAnim 3s forwards;
+}
+@keyframes toastAnim {
+    0%{opacity:0;transform:translateY(-16px);}
+    10%{opacity:1;transform:translateY(0);}
+    85%{opacity:1;}
+    100%{opacity:0;transform:translateY(-16px);}
+}
+
+/* ===== DESKTOP (>600px) ===== */
+@media(min-width:601px) {
+    .page { padding:24px; }
+}
