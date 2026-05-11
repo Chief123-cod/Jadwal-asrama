@@ -150,6 +150,18 @@ tbody tr:last-child td { border-bottom:none; }
     font-size:12px; font-weight:600; margin-bottom:5px;
 }
 
+@media(max-width: 600px) {
+    .mobile-header-bar { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; }
+    .mobile-filter-group { justify-content: flex-start !important; width: 100% !important; gap: 8px !important; flex-wrap: wrap !important; }
+    .mobile-input { flex: 1 1 calc(50% - 4px) !important; min-width: 80px !important; max-width: none !important; }
+    .mobile-input-search { flex: 1 1 100% !important; max-width: none !important; }
+    .mobile-btn { flex: 1 1 calc(33.33% - 6px) !important; padding: 8px 4px !important; font-size: 11px !important; }
+    .mobile-tab-btn { flex: 1 1 50% !important; border-radius: 8px !important; margin-left: 0 !important; }
+    
+    .admin-form-grid { grid-template-columns:1fr; }
+    .dash-title { font-size:18px; }
+}
+
 @media(min-width:601px) {
     .admin-form-grid { grid-template-columns:1fr 1fr; }
     .form-group-full { grid-column:1/-1; }
