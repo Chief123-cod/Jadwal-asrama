@@ -104,35 +104,39 @@
                     <span style="color:var(--text); font-weight:600;">Jadwal Piket</span>
                 </div>
                 
-                <div class="search-bar" style="margin-left:16px; padding:6px 12px; width:200px;">
+                <div class="search-bar filter-search" style="margin-left:16px; padding:6px 12px; width:200px;">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                     <input type="text" placeholder="Cari nama..." id="searchJadwal">
                 </div>
 
-                <select id="filterHari" style="padding:8px 12px; border-radius:8px; border:1px solid var(--border); background:var(--surface2); color:var(--text); font-size:13px; outline:none; cursor:pointer;">
-                    <option value="Semua">Semua Hari</option>
-                    <option value="Senin">Senin</option>
-                    <option value="Selasa">Selasa</option>
-                    <option value="Rabu">Rabu</option>
-                    <option value="Kamis">Kamis</option>
-                    <option value="Jumat">Jumat</option>
-                    <option value="Sabtu">Sabtu</option>
-                    <option value="Minggu">Minggu</option>
-                </select>
-                <select id="filterStatus" style="padding:8px 12px; border-radius:8px; border:1px solid var(--border); background:var(--surface2); color:var(--text); font-size:13px; outline:none; cursor:pointer;">
-                    <option value="Semua">Semua Status</option>
-                    <option value="Selesai">Selesai</option>
-                    <option value="Menunggu">Menunggu</option>
-                    <option value="Belum">Belum</option>
-                </select>
+                <div class="filter-selects" style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <select id="filterHari" style="padding:8px 12px; border-radius:8px; border:1px solid var(--border); background:var(--surface2); color:var(--text); font-size:13px; outline:none; cursor:pointer;">
+                        <option value="Semua">Semua Hari</option>
+                        <option value="Senin">Senin</option>
+                        <option value="Selasa">Selasa</option>
+                        <option value="Rabu">Rabu</option>
+                        <option value="Kamis">Kamis</option>
+                        <option value="Jumat">Jumat</option>
+                        <option value="Sabtu">Sabtu</option>
+                        <option value="Minggu">Minggu</option>
+                    </select>
+                    <select id="filterStatus" style="padding:8px 12px; border-radius:8px; border:1px solid var(--border); background:var(--surface2); color:var(--text); font-size:13px; outline:none; cursor:pointer;">
+                        <option value="Semua">Semua Status</option>
+                        <option value="Selesai">Selesai</option>
+                        <option value="Menunggu">Menunggu</option>
+                        <option value="Belum">Belum</option>
+                    </select>
+                </div>
                 
                 <div style="flex-grow:1;"></div>
                 
-                <button class="btn-lihat" style="padding:8px 16px; margin:0; border-radius:8px; background:rgba(6,182,212,0.1); color:#06b6d4; border:1px solid rgba(6,182,212,0.2);" onclick="exportCSV()" title="Export ke CSV">📥 CSV</button>
-                <button class="btn-lihat" style="padding:8px 16px; margin:0; border-radius:8px; background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.2);" onclick="exportPDF()" title="Export ke PDF">📄 PDF</button>
-                <button class="btn-tambah" style="padding:8px 16px; margin:0; border-radius:8px; background:var(--surface2); color:var(--text); border:1px solid var(--border);" onclick="document.getElementById('inputExcelData').click()">📂 Import Excel</button>
-                <input type="file" id="inputExcelData" accept=".xlsx, .xls" style="display:none;">
-                <button class="btn-delete" style="padding:8px 16px; margin:0; border-radius:8px; background:rgba(59,130,246,0.1); color:#3b82f6; border:1px solid rgba(59,130,246,0.2);" onclick="resetMingguan()" title="Reset semua status">🔄 Reset</button>
+                <div class="filter-actions" style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <button class="btn-lihat" style="padding:8px 16px; margin:0; border-radius:8px; background:rgba(6,182,212,0.1); color:#06b6d4; border:1px solid rgba(6,182,212,0.2);" onclick="exportCSV()" title="Export ke CSV">📥 CSV</button>
+                    <button class="btn-lihat" style="padding:8px 16px; margin:0; border-radius:8px; background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.2);" onclick="exportPDF()" title="Export ke PDF">📄 PDF</button>
+                    <button class="btn-tambah" style="padding:8px 16px; margin:0; border-radius:8px; background:var(--surface2); color:var(--text); border:1px solid var(--border);" onclick="document.getElementById('inputExcelData').click()">📂 Import Excel</button>
+                    <input type="file" id="inputExcelData" accept=".xlsx, .xls" style="display:none;">
+                    <button class="btn-delete" style="padding:8px 16px; margin:0; border-radius:8px; background:rgba(59,130,246,0.1); color:#3b82f6; border:1px solid rgba(59,130,246,0.2);" onclick="resetMingguan()" title="Reset semua status">🔄 Reset</button>
+                </div>
             </div>
         </div>
 

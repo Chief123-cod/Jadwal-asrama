@@ -74,3 +74,28 @@
     .btn-modal-close:hover { background:var(--accent); border-color:var(--accent); color:white; }
     .btn-modal-understood:hover { background:var(--green); color:white; }
 }
+
+/* Mobile modal fixes */
+@media(max-width:600px) {
+    .modal-box {
+        max-height: 85vh;
+        max-height: 85dvh;
+    }
+    .modal-box-wide {
+        max-width: 100% !important;
+    }
+    #galeriRiwayatList {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 10px !important;
+    }
+    #containerBuktiFoto {
+        max-height: 40vh !important;
+    }
+    .admin-panel {
+        padding: 16px !important;
+    }
+    .admin-form-grid {
+        grid-template-columns: 1fr !important;
+        gap: 10px !important;
+    }
+}

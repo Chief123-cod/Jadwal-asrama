@@ -436,27 +436,415 @@ tbody td {
 }
 
 @media(max-width: 768px) {
-    .kamar-grid { grid-template-columns: 1fr; }
+    /* === Layout === */
     .layout-app { flex-direction: column; }
     .sidebar { width: 100%; height: 60px; flex-direction: row; padding: 0 16px; border-right: none; border-bottom: 1px solid rgba(255,255,255,0.05); }
     .sidebar-logo { margin-bottom: 0; margin-right: auto; flex-direction: row; }
     .sidebar-logo span { display: block; font-size: 16px; }
     .sidebar-nav { flex-direction: row; width: auto; gap: 8px; }
     .nav-item { width: 40px; height: 40px; margin-top: 0 !important; }
-    .topbar { padding: 0 16px; height: 60px; gap: 10px; }
+
+    /* === Topbar (User Dashboard) === */
+    .topbar { 
+        padding: 14px 16px !important; 
+        height: auto !important; 
+        gap: 8px; 
+        flex-wrap: nowrap;
+        align-items: center;
+    }
+    .topbar .topbar-left {
+        gap: 10px !important;
+        flex: 1;
+        min-width: 0;
+    }
+    .topbar .topbar-left > div:first-child {
+        width: 36px !important;
+        height: 36px !important;
+        min-width: 36px;
+        border-radius: 8px !important;
+    }
+    .topbar .topbar-left > div:first-child svg {
+        width: 18px !important;
+        height: 18px !important;
+    }
+    .topbar .topbar-left h1 {
+        font-size: 16px !important;
+        line-height: 1.2;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .topbar .topbar-left p {
+        font-size: 11px !important;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .topbar .topbar-left > div:last-child {
+        min-width: 0;
+        overflow: hidden;
+    }
+    .topbar-right {
+        gap: 6px !important;
+        flex-shrink: 0;
+    }
+    .topbar-right .icon-btn {
+        width: 34px !important;
+        height: 34px !important;
+        min-width: 34px;
+    }
+    .topbar-right .icon-btn svg {
+        width: 17px !important;
+        height: 17px !important;
+    }
+    .topbar-right .btn-delete {
+        padding: 6px 8px !important;
+        border-radius: 8px !important;
+    }
+    .topbar-right .btn-delete svg {
+        width: 16px !important;
+        height: 16px !important;
+    }
     .search-bar { width: auto; flex: 1; }
     .user-profile span { display: none; }
     .content-header { padding: 16px; }
+
+    /* === Content Padding override (inline styles use 24px 32px) === */
+    .main-content > div[style*="padding"] {
+        padding: 14px 16px !important;
+    }
     #tabelKamarContainer { padding: 0 16px 16px !important; }
 
-    /* Responsive untuk Dashboard User */
+    /* === Stats Row (override inline grid-template-columns) === */
+    .stats-row,
+    #statsRow {
+        grid-template-columns: 1fr 1fr !important;
+        gap: 10px !important;
+    }
+    .stat-card {
+        padding: 14px 12px !important;
+        gap: 10px !important;
+    }
+    .stat-icon {
+        width: 42px !important;
+        height: 42px !important;
+    }
+    .stat-value {
+        font-size: 20px !important;
+    }
+    .stat-label {
+        font-size: 11px !important;
+    }
+
+    /* === Leaderboard Section === */
+    .leaderboard-section {
+        padding: 14px !important;
+    }
+    #leaderboardList {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* === Banner Broadcast (Pengumuman) === */
+    #bannerBroadcast {
+        padding: 12px 14px !important;
+        border-radius: 12px !important;
+        margin-bottom: 14px !important;
+    }
+    #bannerBroadcast h3 {
+        font-size: 14px !important;
+        margin-bottom: 4px !important;
+    }
+    #bannerBroadcast p {
+        font-size: 13px !important;
+    }
+
+    /* === Banner Hari Ini (Piket Alert) === */
+    #bannerHariIni {
+        padding: 12px 14px !important;
+        border-radius: 12px !important;
+        margin-bottom: 14px !important;
+        gap: 10px;
+    }
+    #bannerHariIni > div:first-child {
+        flex: 1;
+        min-width: 0;
+    }
+    #bannerHariIni h3 {
+        font-size: 13px !important;
+        margin-bottom: 2px !important;
+    }
+    #bannerHariIni p {
+        font-size: 12px !important;
+    }
+    #bannerHariIni > button {
+        width: 26px !important;
+        height: 26px !important;
+        min-width: 26px;
+        font-size: 13px !important;
+        flex-shrink: 0;
+    }
+
+    /* === Filter / Action Bar (Jadwal Piket tabs) === */
+    .mobile-filter-group {
+        padding: 10px 12px !important;
+        gap: 10px !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        flex-wrap: wrap !important;
+        margin-bottom: 14px !important;
+    }
+    .mobile-filter-group > div:first-child {
+        gap: 6px !important;
+    }
+    .mobile-filter-group > div:first-child svg {
+        width: 18px !important;
+        height: 18px !important;
+    }
+    .mobile-filter-group > div:first-child span {
+        font-size: 14px !important;
+    }
+    /* Hide the spacer div on mobile */
+    .mobile-filter-group > div[style*="flex-grow"] {
+        display: none !important;
+    }
+    /* Tab buttons wrapper */
+    .mobile-filter-group > div:last-child {
+        padding: 3px !important;
+        border-radius: 10px !important;
+        gap: 4px !important;
+        flex: 1;
+        min-width: 0;
+    }
+    .mobile-filter-group .btn-info-icon {
+        font-size: 12px !important;
+        padding: 0 10px !important;
+        height: 30px !important;
+        border-radius: 8px !important;
+        flex: 1;
+        min-width: 0;
+        white-space: nowrap;
+    }
+    .mobile-filter-group .search-bar {
+        margin-left: 0 !important;
+        width: 100% !important;
+        box-sizing: border-box;
+    }
+    .mobile-filter-group select {
+        flex: 1;
+        min-width: 0;
+    }
+    /* Admin filter buttons */
+    .mobile-filter-group .btn-lihat,
+    .mobile-filter-group .btn-tambah,
+    .mobile-filter-group .btn-delete {
+        flex: 1;
+        min-width: 0;
+        padding: 8px 10px !important;
+        font-size: 12px !important;
+        text-align: center;
+        justify-content: center;
+        white-space: nowrap;
+    }
+
+    /* === Kamar Cards === */
+    .kamar-grid { grid-template-columns: 1fr !important; gap: 14px !important; }
+    .kamar-card {
+        border-radius: 14px !important;
+    }
+    .kamar-card-header { 
+        flex-direction: row !important;
+        align-items: center !important;
+        gap: 8px; 
+        padding: 12px 14px !important;
+        flex-wrap: nowrap;
+    }
+    .kamar-card-title {
+        font-size: 15px !important;
+        gap: 8px !important;
+        flex: 1;
+        min-width: 0;
+    }
+    .kamar-card-icon {
+        width: 30px !important;
+        height: 30px !important;
+        min-width: 30px;
+        border-radius: 8px !important;
+    }
+    .kamar-card-icon svg {
+        width: 16px !important;
+        height: 16px !important;
+    }
+    .card-badge-done,
+    .card-badge-status {
+        font-size: 11px !important;
+        padding: 3px 8px !important;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+    .kamar-card-subheader {
+        padding: 8px 14px 6px !important;
+        font-size: 11px !important;
+    }
+    .kamar-row {
+        padding: 10px 14px !important;
+        gap: 8px !important;
+    }
+    .kamar-row-name {
+        font-size: 13px !important;
+    }
+    .kamar-row-task {
+        font-size: 12px !important;
+    }
+    .kamar-action-btn svg {
+        width: 14px !important;
+        height: 14px !important;
+    }
+    /* Row badge adjustments */
+    .row-badge {
+        font-size: 10px !important;
+        padding: 2px 7px !important;
+    }
+
+    /* === Task row inner layout (tugas + button bar) === */
+    .kamar-row > div[style*="background:var(--surface2)"] {
+        padding: 7px 10px !important;
+        border-radius: 8px !important;
+        gap: 8px;
+    }
+    .kamar-row > div[style*="background:var(--surface2)"] .kamar-row-task {
+        font-size: 12px !important;
+    }
+    /* Action buttons in task bar */
+    .kamar-row > div[style*="background:var(--surface2)"] button {
+        padding: 4px 8px !important;
+        font-size: 10px !important;
+        border-radius: 5px !important;
+    }
+
+    /* "Tugas Saya" badge smaller on mobile */
+    .kamar-row span[style*="Tugas Saya"] {
+        font-size: 9px !important;
+        padding: 1px 5px !important;
+    }
+
+    /* === Responsive untuk Dashboard User === */
     .dashboard-wrapper { padding: 16px; width: 100%; box-sizing: border-box; }
     .dash-header { flex-direction: column; align-items: stretch; text-align: center; }
     .dash-header > div:first-child { flex-direction: column; gap: 12px; }
     .dash-header > div:last-child { justify-content: center; flex-wrap: wrap; }
-    .stats-row { grid-template-columns: 1fr; }
-    .kamar-card-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+
+    /* === Table fix === */
+    .table-section { margin-bottom: 16px; }
+    table { min-width: 100% !important; }
+    thead th { padding: 8px 10px !important; font-size: 10px !important; }
+    tbody td { padding: 10px !important; font-size: 12px !important; }
+
+    /* === Drawer (side menu) === */
+    .drawer-panel {
+        width: 85vw !important;
+        max-width: 320px !important;
+        left: -85vw !important;
+    }
+    .drawer-overlay.open .drawer-panel {
+        left: 0 !important;
+    }
+
+    /* === Admin Form Modal on mobile === */
+    .admin-form-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* === Filter wrappers on mobile === */
+    .filter-search {
+        margin-left: 0 !important;
+        width: 100% !important;
+    }
+    .filter-selects {
+        width: 100%;
+        display: flex !important;
+        gap: 8px !important;
+    }
+    .filter-selects select {
+        flex: 1;
+        min-width: 0;
+        width: 50% !important;
+    }
+    .filter-actions {
+        width: 100%;
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 8px !important;
+    }
+    .filter-actions button {
+        width: 100%;
+        justify-content: center;
+        text-align: center;
+    }
+    .filter-actions input[type="file"] {
+        display: none !important;
+    }
+
+    /* === Table overflow === */
+    .table-section {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* === Empty state === */
+    .table-empty {
+        margin: 0 16px !important;
+    }
 }
+
+/* === Extra small phones === */
+@media(max-width: 400px) {
+    .stats-row,
+    #statsRow {
+        grid-template-columns: 1fr !important;
+    }
+    .topbar .topbar-left h1 {
+        font-size: 14px !important;
+    }
+    .topbar .topbar-left p {
+        font-size: 10px !important;
+    }
+    .topbar .topbar-left > div:first-child {
+        width: 32px !important;
+        height: 32px !important;
+        min-width: 32px;
+    }
+    .topbar-right .icon-btn {
+        width: 30px !important;
+        height: 30px !important;
+        min-width: 30px;
+    }
+    .topbar-right .icon-btn svg {
+        width: 15px !important;
+        height: 15px !important;
+    }
+    /* Stack filter bar on very small screens */
+    .mobile-filter-group {
+        flex-direction: column !important;
+        align-items: stretch !important;
+    }
+    .mobile-filter-group > div:last-child {
+        width: 100%;
+    }
+    .mobile-filter-group .btn-lihat,
+    .mobile-filter-group .btn-tambah,
+    .mobile-filter-group .btn-delete {
+        font-size: 11px !important;
+        padding: 7px 6px !important;
+    }
+    /* Banner text smaller */
+    #bannerHariIni h3 {
+        font-size: 12px !important;
+    }
+    #bannerHariIni p {
+        font-size: 11px !important;
+    }
+}
+
 @media(max-width: 1024px) and (min-width: 769px) {
     .kamar-grid { grid-template-columns: repeat(2, 1fr); }
 }
