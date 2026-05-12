@@ -100,7 +100,7 @@
     </div>
 
     <script type="module">
-        let sesi = localStorage.getItem("sesi_asrama");
+        let sesi = sessionStorage.getItem("sesi_asrama");
         if (sesi) {
             let data = JSON.parse(sesi);
             if (data.role === "admin") {

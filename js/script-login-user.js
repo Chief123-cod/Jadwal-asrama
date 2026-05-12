@@ -9,7 +9,7 @@ let dataJadwal = [];
 let dataSudahDimuat = false;
 
 // Cek sesi, jika sudah login redirect
-let sesi = localStorage.getItem("sesi_asrama");
+let sesi = sessionStorage.getItem("sesi_asrama");
 if (sesi) {
     let data = JSON.parse(sesi);
     if (data.role === "admin") {
@@ -93,7 +93,8 @@ window.prosesLoginUser = function() {
 
     if (akunDitemukan) {
         let dataSesi = { role: "user", phone: noUserFormat };
-        localStorage.setItem("sesi_asrama", JSON.stringify(dataSesi));
+        sessionStorage.setItem("sesi_asrama", JSON.stringify(dataSesi));
+        sessionStorage.setItem("last_activity", Date.now());
         munculNotif("Login Berhasil!", "#28a745");
         document.getElementById("inputNoUser").value = "";
         document.getElementById("inputPassUser").value = "";

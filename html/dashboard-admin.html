@@ -135,7 +135,6 @@
                     <button class="btn-lihat" style="padding:8px 16px; margin:0; border-radius:8px; background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.2);" onclick="exportPDF()" title="Export ke PDF">📄 PDF</button>
                     <button class="btn-tambah" style="padding:8px 16px; margin:0; border-radius:8px; background:var(--surface2); color:var(--text); border:1px solid var(--border);" onclick="document.getElementById('inputExcelData').click()">📂 Import Excel</button>
                     <input type="file" id="inputExcelData" accept=".xlsx, .xls" style="display:none;">
-                    <button class="btn-delete" style="padding:8px 16px; margin:0; border-radius:8px; background:rgba(59,130,246,0.1); color:#3b82f6; border:1px solid rgba(59,130,246,0.2);" onclick="resetMingguan()" title="Reset semua status">🔄 Reset</button>
                 </div>
             </div>
         </div>
@@ -309,9 +308,13 @@
         <div class="pesan-user-teks" id="teksPesanUser"></div>
         <div id="containerBuktiFoto"></div>
         
-        <div id="actionKonfirmasi" style="display:flex; gap:10px; padding:0 16px 16px;">
-            <button class="btn-save" style="flex:1; margin:0;" onclick="terimaBukti()">✅ Terima</button>
-            <button class="btn-delete" style="flex:1; margin:0; padding:13px; font-size:14px; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.2);" onclick="tolakBukti()">❌ Tolak</button>
+        <div id="actionKonfirmasi" style="display:flex; gap:12px; padding:0 16px 16px;">
+            <button class="btn-save" style="flex:1; margin:0; display:flex; align-items:center; justify-content:center; gap:8px;" onclick="terimaBukti()">
+                Terima
+            </button>
+            <button class="btn-delete" style="flex:1; margin:0; padding:13px; font-size:14px; font-weight:600; background:#ef4444; color:white; border:none; border-radius:10px; display:flex; align-items:center; justify-content:center; gap:8px; cursor:pointer;" onclick="tolakBukti()">
+                Tolak
+            </button>
         </div>
         <button class="btn-modal-close" id="btnTutupBukti" onclick="tutupBukti()">Tutup</button>
     </div>
@@ -400,6 +403,28 @@
             </div>
         </div>
         <button class="btn-modal-close" onclick="tutupRiwayatFoto()">Tutup</button>
+    </div>
+</div>
+
+<!-- Modal: Alasan Penolakan Bukti -->
+<div id="modalTolakBukti" class="modal-overlay">
+    <div class="modal-box" style="max-width: 400px;">
+        <div class="modal-header-bar modal-header-warning">
+            <h3>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                Tolak Bukti
+            </h3>
+            <button class="modal-close-x" onclick="document.getElementById('modalTolakBukti').style.display='none'">✕</button>
+        </div>
+        <div style="padding:20px;">
+            <label style="font-size:14px; font-weight:600; color:var(--text); display:block; margin-bottom:8px;">Alasan menolak bukti ini:</label>
+            <textarea id="inputAlasanTolak" rows="3" placeholder="Masukkan alasan di sini..." style="width:100%; padding:12px; border-radius:10px; border:1px solid var(--border); background:var(--surface2); color:var(--text); font-family:inherit; margin-bottom:16px; outline:none; resize:none;"></textarea>
+            
+            <div style="display:flex; gap:12px;">
+                <button class="btn-delete" style="flex:1; margin:0; padding:12px; font-size:14px; font-weight:600; background:#ef4444; color:white; border:none; border-radius:10px; cursor:pointer;" onclick="konfirmasiTolakBukti()">Oke</button>
+                <button class="btn-modal-close" style="flex:1; margin:0; padding:12px; border-radius:10px; cursor:pointer;" onclick="document.getElementById('modalTolakBukti').style.display='none'">Batal</button>
+            </div>
+        </div>
     </div>
 </div>
 

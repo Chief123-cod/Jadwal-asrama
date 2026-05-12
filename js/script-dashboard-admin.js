@@ -11,7 +11,7 @@ let currentUser = null;
 let dataJadwal = [];
 
 // Cek sesi login
-let sesi = localStorage.getItem("sesi_asrama");
+let sesi = sessionStorage.getItem("sesi_asrama");
 if (!sesi) {
     window.location.href = "../index.html";
 } else {
@@ -20,6 +20,29 @@ if (!sesi) {
         window.location.href = "dashboard-user.html";
     }
 }
+
+// Inactivity Timeout (15 Menit)
+const TIMEOUT_MS = 15 * 60 * 1000;
+function resetTimer() {
+    if(sessionStorage.getItem("sesi_asrama")) {
+        sessionStorage.setItem("last_activity", Date.now());
+    }
+}
+window.addEventListener("mousemove", resetTimer);
+window.addEventListener("keydown", resetTimer);
+window.addEventListener("click", resetTimer);
+window.addEventListener("scroll", resetTimer);
+window.addEventListener("touchstart", resetTimer);
+
+setInterval(() => {
+    let lastActivity = sessionStorage.getItem("last_activity");
+    if (lastActivity && (Date.now() - parseInt(lastActivity) > TIMEOUT_MS)) {
+        sessionStorage.removeItem("sesi_asrama");
+        sessionStorage.removeItem("last_activity");
+        alert("Sesi Anda telah habis karena tidak ada aktivitas. Silakan login kembali.");
+        window.location.href = "../index.html";
+    }
+}, 60000);
 
 // Logika Otomatis Dunia Nyata: Reset Minggu & Deadline 19:00
 async function jalankanLogikaOtomatis() {
@@ -78,10 +101,22 @@ async function jalankanLogikaOtomatis() {
 
         if (jam >= 19) {
             jadwalList.forEach(item => {
-                if (item.hari === namaHariIni && !item.selesai && !item.menungguVerifikasi && !item.alpa) {
-                    updateData['jadwal_piket/' + item.id + '/alpa'] = true;
-                    butuhUpdate = true;
-                    console.log("Sistem: Tenggat waktu jam 19:00 lewat. Menandai Alpa untuk " + item.nama);
+                if (item.hari === namaHariIni && !item.selesai && !item.alpa) {
+                    if (item.menungguVerifikasi) {
+                        // User sudah kirim bukti tapi admin belum verifikasi → otomatis diterima
+                        let skorBaru = (item.skorSelesai || 0) + 1;
+                        updateData['jadwal_piket/' + item.id + '/selesai'] = true;
+                        updateData['jadwal_piket/' + item.id + '/menungguVerifikasi'] = false;
+                        updateData['jadwal_piket/' + item.id + '/skorSelesai'] = skorBaru;
+                        updateData['jadwal_piket/' + item.id + '/teguranCount'] = 0;
+                        butuhUpdate = true;
+                        console.log("Sistem: Auto-konfirmasi bukti untuk " + item.nama + " (admin belum verifikasi sebelum deadline)");
+                    } else {
+                        // User belum kirim bukti sama sekali → Alpa
+                        updateData['jadwal_piket/' + item.id + '/alpa'] = true;
+                        butuhUpdate = true;
+                        console.log("Sistem: Tenggat waktu jam 19:00 lewat. Menandai Alpa untuk " + item.nama);
+                    }
                 }
             });
         }
@@ -372,7 +407,8 @@ onValue(ref(db, 'settings/pengumuman'), (snapshot) => {
 
 // Logout
 window.logoutSistem = function() {
-    localStorage.removeItem("sesi_asrama");
+    sessionStorage.removeItem("sesi_asrama");
+    sessionStorage.removeItem("last_activity");
     munculNotif("Berhasil keluar akun.", "#6c757d");
     setTimeout(() => { window.location.href = "../index.html"; }, 500);
 }
@@ -482,27 +518,6 @@ window.simpanEdit = function() {
     });
 }
 
-// Reset Mingguan
-window.resetMingguan = function() {
-    if (dataJadwal.length === 0) {
-        munculNotif("Belum ada jadwal/mahasiswa yang terdaftar untuk di-reset!", "#ff9800");
-        return;
-    }
-    if (confirm("Yakin ingin reset semua jadwal menjadi 'Belum'? (Foto dan status selesai akan direset)")) {
-        let updates = {};
-        dataJadwal.forEach(item => {
-            updates['jadwal_piket/' + item.id + '/selesai'] = false;
-            updates['jadwal_piket/' + item.id + '/menungguVerifikasi'] = false;
-            updates['jadwal_piket/' + item.id + '/foto'] = "";
-            updates['jadwal_piket/' + item.id + '/fotos'] = [];
-            updates['jadwal_piket/' + item.id + '/pesanUser'] = "";
-        });
-        update(ref(db), updates).then(() => {
-            munculNotif("Semua jadwal berhasil di-reset untuk minggu ini!", "#28a745");
-        });
-    }
-}
-
 // Kirim Info via WhatsApp
 window.kirimWA = function(id) {
     let data = dataJadwal.find(d => d.id === id);
@@ -609,25 +624,35 @@ window.terimaBukti = async function() {
 }
 
 window.tolakBukti = function() {
+    // Membuka modal custom alih-alih prompt bawaan
+    document.getElementById("inputAlasanTolak").value = "";
+    document.getElementById("modalTolakBukti").style.display = "flex";
+}
+
+window.konfirmasiTolakBukti = function() {
     let id = document.getElementById("actionKonfirmasi").dataset.id;
     let data = dataJadwal.find(d => d.id === id);
     let currentTeguran = data.teguranCount || 0;
     
-    let alasan = prompt("Alasan menolak bukti ini:");
-    if (alasan) {
-        update(ref(db, 'jadwal_piket/' + id), { 
-            menungguVerifikasi: false, 
-            selesai: false, 
-            pesanAdmin: "BUKTI DITOLAK: " + alasan,
-            pesanDibaca: false,
-            teguranCount: currentTeguran + 1,
-            foto: null, // Hapus foto agar user kirim ulang
-            fotos: null
-        }).then(() => {
-            munculNotif("Bukti ditolak. User harus mengirim ulang foto.", "#dc3545");
-            tutupBukti();
-        });
+    let alasan = document.getElementById("inputAlasanTolak").value.trim();
+    if (!alasan) {
+        munculNotif("Alasan penolakan tidak boleh kosong!", "#ff9800");
+        return;
     }
+    
+    update(ref(db, 'jadwal_piket/' + id), { 
+        menungguVerifikasi: false, 
+        selesai: false, 
+        pesanAdmin: "BUKTI DITOLAK: " + alasan,
+        pesanDibaca: false,
+        teguranCount: currentTeguran + 1,
+        foto: null, // Hapus foto agar user kirim ulang
+        fotos: null
+    }).then(() => {
+        munculNotif("Bukti ditolak. User harus mengirim ulang foto.", "#dc3545");
+        document.getElementById("modalTolakBukti").style.display = "none";
+        tutupBukti();
+    });
 }
 
 // Buka Galeri Riwayat Foto

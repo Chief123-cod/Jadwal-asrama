@@ -11,7 +11,7 @@ let idSedangUpload = null;
 let idBacaPesan = null;
 
 // Cek sesi login
-let sesi = localStorage.getItem("sesi_asrama");
+let sesi = sessionStorage.getItem("sesi_asrama");
 if (!sesi) {
     window.location.href = "../index.html";
 } else {
@@ -20,6 +20,32 @@ if (!sesi) {
         window.location.href = "dashboard-admin.html";
     }
 }
+
+// Inactivity Timeout (15 Menit)
+const TIMEOUT_MS = 15 * 60 * 1000;
+function resetTimer() {
+    if(sessionStorage.getItem("sesi_asrama")) {
+        sessionStorage.setItem("last_activity", Date.now());
+    }
+}
+window.addEventListener("mousemove", resetTimer);
+window.addEventListener("keydown", resetTimer);
+window.addEventListener("click", resetTimer);
+window.addEventListener("scroll", resetTimer);
+window.addEventListener("touchstart", resetTimer);
+
+setInterval(() => {
+    let lastActivity = sessionStorage.getItem("last_activity");
+    if (lastActivity && (Date.now() - parseInt(lastActivity) > TIMEOUT_MS)) {
+        sessionStorage.removeItem("sesi_asrama");
+        sessionStorage.removeItem("last_activity");
+        alert("Sesi Anda telah habis karena tidak ada aktivitas. Silakan login kembali.");
+        window.location.href = "../index.html";
+    }
+}, 60000);
+
+// Persisten pesan dibuka (selama tab tidak diclose)
+let openedMessages = JSON.parse(sessionStorage.getItem("opened_messages") || "[]");
 
 // Notifikasi Toast
 function munculNotif(pesan, warna = "#333") {
@@ -193,7 +219,18 @@ function renderTabel() {
                 myTaskMarker = '<span style="background:var(--accent); color:white; font-size:10px; padding:2px 6px; border-radius:4px; font-weight:bold; margin-left:8px;">Tugas Saya</span>';
                 
                 if (item.pesanAdmin && !item.pesanDibaca) {
-                    extraBtn = `<button onclick="bukaPesanUser('${item.id}', '${item.pesanAdmin}')" style="background:var(--red); color:white; border:none; padding:4px 10px; border-radius:6px; font-size:11px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:4px;">📩 Pesan Admin!</button>`;
+                    let isOpened = openedMessages.includes(item.id);
+                    let btnPesanDisplay = isOpened ? "none" : "flex";
+                    let actionDisplay = isOpened ? "flex" : "none";
+                    let actionDisplayIzin = isOpened ? "inline-block" : "none";
+                    
+                    extraBtn = `<button id="btnPesanAdmin_${item.id}" onclick="bukaPesanUser('${item.id}', '${item.pesanAdmin}')" style="display:${btnPesanDisplay}; background:var(--red); color:white; border:none; padding:4px 10px; border-radius:6px; font-size:11px; font-weight:600; cursor:pointer; align-items:center; gap:4px;">📩 Pesan Admin!</button>`;
+                    if (item.hari === hariIniStr) {
+                        extraBtn += `
+                            <button id="btnKirim_${item.id}" onclick="bukaKamera('${item.id}')" style="display:${actionDisplay}; background:var(--green); color:white; border:none; padding:4px 10px; border-radius:6px; font-size:11px; font-weight:600; cursor:pointer; align-items:center; gap:4px;">📷 Kirim Bukti</button>
+                            <button id="btnIzin_${item.id}" onclick="izinTugas('${item.id}')" style="display:${actionDisplayIzin}; background:rgba(6,182,212,0.1); color:var(--cyan); border:1px solid rgba(6,182,212,0.2); padding:4px 10px; border-radius:6px; font-size:11px; font-weight:600; cursor:pointer;">📝 Izin</button>
+                        `;
+                    }
                 } else if (item.alpa) {
                     extraBtn = `<span style="font-size:11px; color:#dc2626; font-weight:600;">Waktu Habis</span>`;
                 } else if (!item.selesai && !item.menungguVerifikasi) {
@@ -249,7 +286,9 @@ function renderTabel() {
 
 // Logout
 window.logoutSistem = function() {
-    localStorage.removeItem("sesi_asrama");
+    sessionStorage.removeItem("sesi_asrama");
+    sessionStorage.removeItem("last_activity");
+    sessionStorage.removeItem("opened_messages");
     munculNotif("Berhasil keluar akun.", "#6c757d");
     setTimeout(() => { window.location.href = "../index.html"; }, 500);
 }
@@ -266,14 +305,33 @@ onValue(ref(db, 'jadwal_piket'), (snapshot) => {
 // Buka / Tutup Modal Pesan Admin
 window.bukaPesanUser = function(id, pesanText) {
     idBacaPesan = id;
-    document.getElementById("teksPesanAdmin").innerText = `"${pesanText}"`;
-    document.getElementById("modalPesanAdmin").style.display = "flex";
+    let elTeks = document.getElementById("teksPesanAdmin");
+    if(elTeks) elTeks.innerText = `"${pesanText}"`;
+    
+    // Munculkan tombol di card
+    let btnKirim = document.getElementById(`btnKirim_${id}`);
+    let btnIzin = document.getElementById(`btnIzin_${id}`);
+    let btnPesan = document.getElementById(`btnPesanAdmin_${id}`);
+    
+    if (btnKirim) btnKirim.style.display = "flex";
+    if (btnIzin) btnIzin.style.display = "inline-block";
+    if (btnPesan) btnPesan.style.display = "none";
+    
+    // Simpan ke array openedMessages agar persisten ketika di-refresh
+    if (!openedMessages.includes(id)) {
+        openedMessages.push(id);
+        sessionStorage.setItem("opened_messages", JSON.stringify(openedMessages));
+    }
+    
+    let modal = document.getElementById("modalPesanAdmin");
+    if(modal) modal.style.display = "flex";
 }
 
 window.tutupPesanAdmin = function() {
-    update(ref(db, 'jadwal_piket/' + idBacaPesan), { pesanDibaca: true });
+    // Hanya tutup modal, JANGAN set pesanDibaca: true
+    // Pesan akan tetap muncul sampai user kirim foto atau izin
     document.getElementById("modalPesanAdmin").style.display = "none";
-    munculNotif("Pesan admin telah dibaca.", "#17a2b8");
+    munculNotif("Segera lakukan piket ulang dan kirim bukti foto!", "#ff9800");
 }
 
 // Upload Foto Bukti
@@ -331,7 +389,9 @@ window.izinTugas = function(id) {
             menungguVerifikasi: true, 
             foto: "", 
             fotos: [], 
-            pesanUser: "IZIN: " + alasan
+            pesanUser: "IZIN: " + alasan,
+            pesanDibaca: true,
+            pesanAdmin: ""
         }).then(() => munculNotif("Izin terkirim. Menunggu persetujuan admin.", "#17a2b8"));
     }
 }
@@ -422,7 +482,9 @@ document.getElementById("btnConfirmUpload").addEventListener("click", async func
         btn.innerText = "Mengirim...";
         await update(ref(db, 'jadwal_piket/' + idSedangUpload), {
             menungguVerifikasi: true, foto: arrayFotoTerkompres[0],
-            fotos: arrayFotoTerkompres, pesanUser: pesanUser
+            fotos: arrayFotoTerkompres, pesanUser: pesanUser,
+            pesanDibaca: true,
+            pesanAdmin: ""
         });
         munculNotif("Bukti terkirim! Menunggu verifikasi admin.", "#28a745");
         tutupPreviewUpload();
@@ -468,9 +530,9 @@ window.simpanPassword = function() {
         });
         
         update(ref(db), updates).then(() => {
-            let s = JSON.parse(localStorage.getItem("sesi_asrama"));
+            let s = JSON.parse(sessionStorage.getItem("sesi_asrama"));
             s.password = passBaru;
-            localStorage.setItem("sesi_asrama", JSON.stringify(s));
+            sessionStorage.setItem("sesi_asrama", JSON.stringify(s));
             
             munculNotif("Password berhasil diubah!", "#28a745");
             tutupProfil();

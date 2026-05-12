@@ -5,7 +5,7 @@
 const PASS_BENAR = "monitor123";
 
 // Cek sesi, jika sudah login redirect
-let sesi = localStorage.getItem("sesi_asrama");
+let sesi = sessionStorage.getItem("sesi_asrama");
 if (sesi) {
     let data = JSON.parse(sesi);
     if (data.role === "admin") {
@@ -45,7 +45,8 @@ window.prosesLoginAdmin = function() {
     }
     if (pass === PASS_BENAR) {
         let dataSesi = { role: "admin" };
-        localStorage.setItem("sesi_asrama", JSON.stringify(dataSesi));
+        sessionStorage.setItem("sesi_asrama", JSON.stringify(dataSesi));
+        sessionStorage.setItem("last_activity", Date.now());
         munculNotif("Berhasil masuk sebagai Admin!", "#28a745");
         document.getElementById("inputPassAdmin").value = "";
         setTimeout(() => { window.location.href = "dashboard-admin.html"; }, 500);
