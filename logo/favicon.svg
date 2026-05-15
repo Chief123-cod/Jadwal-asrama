@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#1e1e2e"/>
+      <stop offset="100%" stop-color="#13131f"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="url(#bg)"/>
+  <!-- G letter -->
+  <path d="M30,12 C18,12 9,21 9,33 C9,45 18,54 30,54 C37,54 42,51 42,51 L42,35 L28,35 L28,40 L37,40 L37,48 C37,48 34,51 30,51 C20,51 14,43 14,33 C14,23 20,15 30,15 C35,15 39,17.5 41,19.5 L44.5,16 C41.5,13 36,12 30,12 Z" fill="white"/>
+  <!-- H letter overlapping -->
+  <path d="M35,14 L35,54 L40,54 L40,36 L52,36 L52,54 L57,54 L57,14 L52,14 L52,31 L40,31 L40,14 Z" fill="rgba(255,255,255,0.9)"/>
+</svg>

@@ -2,7 +2,7 @@
 // SCRIPT-LOGIN-ADMIN.JS - Login Admin / Monitor
 // ===========================
 
-const PASS_BENAR = "monitor123";
+const PASS_BENAR = "12345678";
 
 // Cek sesi, jika sudah login redirect
 let sesi = sessionStorage.getItem("sesi_asrama");
@@ -32,11 +32,11 @@ function munculNotif(pesan, warna = "#333") {
 }
 
 // Login Admin
-document.getElementById("inputPassAdmin").addEventListener("keydown", function(e) {
+document.getElementById("inputPassAdmin").addEventListener("keydown", function (e) {
     if (e.key === "Enter") prosesLoginAdmin();
 });
 
-window.prosesLoginAdmin = function() {
+window.prosesLoginAdmin = function () {
     let pass = document.getElementById("inputPassAdmin").value.trim();
     if (!pass) {
         munculNotif("Password harus diisi!", "#ff9800");
