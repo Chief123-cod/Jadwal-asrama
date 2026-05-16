@@ -47,7 +47,9 @@ window.prosesLoginAdmin = function () {
         let dataSesi = { role: "admin" };
         sessionStorage.setItem("sesi_asrama", JSON.stringify(dataSesi));
         sessionStorage.setItem("last_activity", Date.now());
-        munculNotif("Berhasil masuk sebagai Admin!", "#28a745");
+        sessionStorage.setItem("showGreetingOnce", "true");
+
+        munculNotif("Berhasil Masuk! Mengalihkan...", "#28a745");
         document.getElementById("inputPassAdmin").value = "";
         setTimeout(() => { window.location.href = "dashboard-admin.html"; }, 500);
     } else {

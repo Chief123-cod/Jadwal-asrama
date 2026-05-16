@@ -202,8 +202,26 @@ function renderTabel() {
     });
 
     let elEmpty = document.getElementById("tableEmpty");
+    let elEmptyText = document.getElementById("tableEmptyText");
     if (elEmpty) {
-        elEmpty.style.display = filteredData.length === 0 ? "block" : "none";
+        if (filteredData.length === 0) {
+            elEmpty.style.display = "block";
+            if (elEmptyText) {
+                if (statusVal !== "Semua") {
+                    elEmptyText.textContent = `Tidak ada jadwal piket dengan status "${statusVal}"`;
+                } else if (hariVal !== "Semua") {
+                    elEmptyText.textContent = `Tidak ada jadwal piket pada hari ${hariVal}`;
+                } else if (kamarVal && kamarVal !== "Semua") {
+                    elEmptyText.textContent = `Tidak ada jadwal piket di ${kamarVal}`;
+                } else if (searchVal !== "") {
+                    elEmptyText.textContent = "Tidak ada jadwal piket yang cocok dengan pencarian";
+                } else {
+                    elEmptyText.textContent = "Belum ada jadwal piket";
+                }
+            }
+        } else {
+            elEmpty.style.display = "none";
+        }
     }
 
     // Mengelompokkan data berdasarkan Kamar
@@ -409,6 +427,7 @@ onValue(ref(db, 'settings/pengumuman'), (snapshot) => {
 window.logoutSistem = function() {
     sessionStorage.removeItem("sesi_asrama");
     sessionStorage.removeItem("last_activity");
+    sessionStorage.removeItem("greetingHidden");
     munculNotif("Berhasil keluar akun.", "#6c757d");
     setTimeout(() => { window.location.href = "../index.html"; }, 500);
 }

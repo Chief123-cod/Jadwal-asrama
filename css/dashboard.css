@@ -9,7 +9,7 @@
     height: 100vh;
     height: 100dvh;
     overflow: hidden;
-    background: var(--bg);
+    background: var(--surface);
     color: var(--text);
     position: fixed;
     top: 0; left: 0; z-index: 10;
@@ -18,8 +18,8 @@
 /* Sidebar */
 .sidebar {
     width: 80px;
-    background: #16171d;
-    border-right: 1px solid rgba(255, 255, 255, 0.05);
+    background: var(--surface);
+    border-right: 1px solid var(--border);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -75,8 +75,8 @@
     text-decoration: none;
 }
 .nav-item:hover {
-    color: white;
-    background: rgba(255, 255, 255, 0.05);
+    color: var(--text);
+    background: var(--surface2);
 }
 .nav-item.active {
     background: #7c3aed;
@@ -91,6 +91,10 @@
     flex-direction: column;
     overflow-y: auto;
     overflow-x: hidden;
+    background: var(--bg);
+    border-top-left-radius: 16px;
+    border-top: 1px solid var(--border);
+    border-left: 1px solid var(--border);
 }
 
 /* Topbar */
@@ -436,6 +440,56 @@ tbody td {
     padding:14px 16px; font-size:13px; border-bottom:1px solid var(--border);
 }
 
+/* Sidebar Persistent Navigation */
+.sidebar-persistent {
+    width: 240px;
+    background: var(--surface);
+    border-right: none;
+    display: flex;
+    flex-direction: column;
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    white-space: nowrap;
+    overflow: hidden;
+    flex-shrink: 0;
+    z-index: 100;
+}
+.sidebar-persistent.collapsed {
+    width: 80px;
+}
+.hamburger-btn:hover { background: var(--surface2) !important; }
+
+.sidebar-menu {
+    display: flex; flex-direction: column;
+    padding: 0; gap: 8px;
+    width: 100%;
+}
+.sidebar-item {
+    display: flex; align-items: center; gap: 16px;
+    height: 48px; padding: 0 18px; margin: 0 12px; border-radius: 16px;
+    color: var(--text2); text-decoration: none;
+    transition: background 0.2s, color 0.2s;
+    overflow: hidden;
+}
+.sidebar-item:hover { background: var(--surface2); color: var(--text); }
+.sidebar-item.active { background: #7c3aed; color: white; }
+.sidebar-item svg { flex-shrink: 0; width: 20px; height: 20px; }
+.sidebar-item span { opacity: 1; transition: opacity 0.2s; font-weight: 500; font-size: 14px; }
+
+.sidebar-section-title {
+    font-size: 11px; font-weight: 600; color: var(--text2);
+    padding: 16px 30px 8px; width: 100%;
+    opacity: 1; transition: opacity 0.2s;
+}
+
+.sidebar-footer { margin-top: auto; padding-bottom: 24px; width: 100%; }
+.sidebar-divider { height: 1px; background: var(--border); margin: 0 20px 16px; }
+
+/* Collapsed Overrides */
+.sidebar-persistent.collapsed .sidebar-section-title { opacity: 0; }
+.sidebar-persistent.collapsed .sidebar-item span { opacity: 0; }
+
+.mobile-overlay { display: none; }
+
 @media(max-width: 768px) {
     /* === Layout === */
     .layout-app { 
@@ -443,11 +497,39 @@ tbody td {
         height: 100vh !important;
         height: 100dvh !important;
     }
-    .sidebar { width: 100%; height: 60px; flex-direction: row; padding: 0 16px; border-right: none; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .sidebar { width: 100%; height: 60px; flex-direction: row; padding: 0 16px; border-right: none; border-bottom: 1px solid var(--border); }
     .sidebar-logo { margin-bottom: 0; margin-right: auto; flex-direction: row; }
     .sidebar-logo span { display: block; font-size: 16px; }
     .sidebar-nav { flex-direction: row; width: auto; gap: 8px; }
     .nav-item { width: 40px; height: 40px; margin-top: 0 !important; }
+
+    /* Persistent Sidebar Mobile Override */
+    .sidebar-persistent {
+        position: fixed !important;
+        top: 0; bottom: 0; left: 0;
+        transform: translateX(-100%);
+        width: 260px !important;
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 1000;
+        border-right: 1px solid var(--border);
+    }
+    .sidebar-persistent.mobile-open {
+        transform: translateX(0);
+    }
+    .sidebar-persistent.collapsed .sidebar-item span,
+    .sidebar-persistent.collapsed .sidebar-section-title {
+        opacity: 1;
+    }
+    .mobile-overlay {
+        display: none;
+        position: fixed; inset: 0;
+        background: rgba(0,0,0,0.5);
+        z-index: 999;
+        opacity: 0; transition: opacity 0.3s;
+    }
+    .mobile-overlay.active {
+        display: block; opacity: 1;
+    }
 
     /* === Topbar (User Dashboard) === */
     .topbar { 
