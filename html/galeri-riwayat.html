@@ -14,7 +14,7 @@
     <link rel="stylesheet" href="../css/global.css">
     <link rel="stylesheet" href="../css/dashboard.css">
     <link rel="stylesheet" href="../css/galeri-riwayat.css">
-    <script>if (localStorage.getItem('theme') === 'light') document.documentElement.classList.add('light-mode');</script>
+    <!-- Tema dimatikan di halaman ini -->
 </head>
 
 <body>
@@ -56,12 +56,7 @@
                 </div>
             </div>
             <div class="topbar-right">
-                <button class="icon-btn" onclick="toggleTheme()" title="Ganti Tema Gelap/Terang"
-                    style="background:rgba(255,255,255,0.05);">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2">
-                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-                    </svg>
-                </button>
+
             </div>
         </header>
 
@@ -107,6 +102,15 @@
                             <polyline points="21 15 16 10 5 21"></polyline>
                         </svg>
                         <span>Galeri Riwayat Foto</span>
+                    </a>
+                    <a href="leaderboard.html" class="sidebar-item">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M8 21h8"></path>
+                            <path d="M12 17v4"></path>
+                            <path d="M7 4h10l1 8H6L7 4z"></path>
+                            <path d="M5 12l-1 4h16l-1-4"></path>
+                        </svg>
+                        <span>Leaderboard</span>
                     </a>
                 </div>
 

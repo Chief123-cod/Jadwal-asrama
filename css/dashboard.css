@@ -493,7 +493,7 @@ tbody td {
 }
 
 .sidebar-footer { margin-top: auto; padding-bottom: 24px; width: 100%; }
-.sidebar-divider { height: 1px; background: var(--border); margin: 0 20px 16px; }
+.sidebar-divider { height: 1px; background: var(--border); margin: 0 20px 10px; }
 
 /* Collapsed Overrides */
 .sidebar-persistent.collapsed .sidebar-section-title { opacity: 0; }
@@ -519,11 +519,13 @@ tbody td {
 
 .mobile-sidebar-header {
     display: none;
-    padding: 14px 16px;
+    height: 66px; /* Fixed height to match topbar */
+    padding: 0 16px;
     align-items: center;
     justify-content: flex-start;
     gap: 10px;
     border-bottom: 1px solid var(--border);
+    box-sizing: border-box;
 }
 .mobile-sidebar-header .logo-text {
     font-size: 16px; font-weight: 700; color: var(--text);
@@ -549,12 +551,23 @@ tbody td {
     /* === Layout === */
     .layout-app { 
         flex-direction: column; 
-        height: 100vh !important;
-        height: 100dvh !important;
+        position: relative !important;
+        height: auto !important;
+        min-height: 100vh;
+        min-height: 100dvh;
+        overflow: visible !important;
+    }
+    /* Override inline overflow:hidden on the flex wrapper */
+    .layout-app > div[style*="overflow"] {
+        overflow: visible !important;
+        flex-direction: column !important;
     }
     .main-content {
         border-top-left-radius: 0;
         border-left: none;
+        overflow-y: auto !important;
+        flex: 1;
+        min-height: 0;
     }
     .sidebar { width: 100%; height: 60px; flex-direction: row; padding: 0 16px; border-right: none; border-bottom: 1px solid var(--border); }
     .sidebar-logo { margin-bottom: 0; margin-right: auto; flex-direction: row; }
@@ -571,6 +584,8 @@ tbody td {
         transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         z-index: 1000;
         border-right: 1px solid var(--border);
+        border-top-right-radius: 20px;
+        border-bottom-right-radius: 20px;
     }
     .sidebar-persistent.mobile-open {
         transform: translateX(0);
@@ -586,6 +601,12 @@ tbody td {
         margin-top: 0 !important;
         padding-top: 8px;
     }
+    .sidebar-persistent .sidebar-divider {
+        margin: 0 0 10px 0 !important;
+    }
+    .sidebar-persistent .sidebar-footer {
+        padding-bottom: 24px !important;
+    }
     .mobile-overlay {
         display: none;
         position: fixed; inset: 0;
@@ -599,11 +620,12 @@ tbody td {
 
     /* === Topbar (User Dashboard) === */
     .topbar { 
-        padding: 14px 16px !important; 
-        height: auto !important; 
+        padding: 0 16px !important; 
+        height: 66px !important; /* Match mobile-sidebar-header */
         gap: 8px; 
         flex-wrap: nowrap;
         align-items: center;
+        box-sizing: border-box;
     }
     .topbar .topbar-left {
         gap: 10px !important;

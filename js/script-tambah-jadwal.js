@@ -56,11 +56,7 @@ function munculNotif(pesan, warna = "#333") {
     setTimeout(() => { toast.remove(); }, 3000);
 }
 
-// Theme Toggle
-window.toggleTheme = function() {
-    let isLight = document.documentElement.classList.toggle('light-mode');
-    localStorage.setItem('theme', isLight ? 'light' : 'dark');
-}
+
 
 // Logout
 window.logoutSistem = function() {
@@ -91,7 +87,7 @@ window.tambahData = function() {
 
     push(ref(db, 'jadwal_piket'), {
         hari: hari, kamar: kamar, nama: nama, nowa: nowaFormat, password: passAkun, tugas: tugas,
-        selesai: false, foto: "", fotos: [], pesanAdmin: "", pesanUser: "", pesanDibaca: false, skorSelesai: 0, teguranCount: 0
+        selesai: false, foto: "", fotos: [], pesanAdmin: "", pesanUser: "", pesanDibaca: false, skorSelesai: 0, skorPelanggaran: 0, teguranCount: 0
     }).then(() => {
         // Show success state
         document.getElementById("formCardArea").style.display = "none";

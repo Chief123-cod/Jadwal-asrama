@@ -104,18 +104,25 @@ async function jalankanLogikaOtomatis() {
                 if (item.hari === namaHariIni && !item.selesai && !item.alpa) {
                     if (item.menungguVerifikasi) {
                         // User sudah kirim bukti tapi admin belum verifikasi → otomatis diterima
-                        let skorBaru = (item.skorSelesai || 0) + 1;
+                        let currentPelanggaran = item.skorPelanggaran || 0;
+                        let currentSelesai = item.skorSelesai || 0;
+                        if (currentPelanggaran > 0) {
+                            updateData['jadwal_piket/' + item.id + '/skorPelanggaran'] = currentPelanggaran - 1;
+                        } else {
+                            updateData['jadwal_piket/' + item.id + '/skorSelesai'] = currentSelesai + 1;
+                        }
                         updateData['jadwal_piket/' + item.id + '/selesai'] = true;
                         updateData['jadwal_piket/' + item.id + '/menungguVerifikasi'] = false;
-                        updateData['jadwal_piket/' + item.id + '/skorSelesai'] = skorBaru;
                         updateData['jadwal_piket/' + item.id + '/teguranCount'] = 0;
                         butuhUpdate = true;
                         console.log("Sistem: Auto-konfirmasi bukti untuk " + item.nama + " (admin belum verifikasi sebelum deadline)");
                     } else {
-                        // User belum kirim bukti sama sekali → Alpa
+                        // User belum kirim bukti sama sekali → Alpa + Poin Pelanggaran
+                        let skorPelanggaranBaru = (item.skorPelanggaran || 0) + 1;
                         updateData['jadwal_piket/' + item.id + '/alpa'] = true;
+                        updateData['jadwal_piket/' + item.id + '/skorPelanggaran'] = skorPelanggaranBaru;
                         butuhUpdate = true;
-                        console.log("Sistem: Tenggat waktu jam 19:00 lewat. Menandai Alpa untuk " + item.nama);
+                        console.log("Sistem: Tenggat waktu jam 19:00 lewat. Menandai Alpa + Pelanggaran untuk " + item.nama);
                     }
                 }
             });
@@ -462,7 +469,7 @@ window.tambahData = function() {
 
     push(ref(db, 'jadwal_piket'), {
         hari: hari, kamar: kamar, nama: nama, nowa: nowaFormat, password: passAkun, tugas: tugas,
-        selesai: false, foto: "", fotos: [], pesanAdmin: "", pesanUser: "", pesanDibaca: false, skorSelesai: 0, teguranCount: 0
+        selesai: false, foto: "", fotos: [], pesanAdmin: "", pesanUser: "", pesanDibaca: false, skorSelesai: 0, skorPelanggaran: 0, teguranCount: 0
     }).then(() => {
         document.getElementById("hari").value = "";
         document.getElementById("kamar").value = "";
@@ -601,7 +608,8 @@ window.tutupBukti = function() {
 window.terimaBukti = async function() {
     let id = document.getElementById("actionKonfirmasi").dataset.id;
     let data = dataJadwal.find(d => d.id === id);
-    let skorBaru = (data.skorSelesai || 0) + 1;
+    let currentPelanggaran = data.skorPelanggaran || 0;
+    let currentSelesai = data.skorSelesai || 0;
     
     // Simple fast hash function
     function getHash(str) {
@@ -614,9 +622,13 @@ window.terimaBukti = async function() {
     }
 
     let updates = {};
+    if (currentPelanggaran > 0) {
+        updates['jadwal_piket/' + id + '/skorPelanggaran'] = currentPelanggaran - 1;
+    } else {
+        updates['jadwal_piket/' + id + '/skorSelesai'] = currentSelesai + 1;
+    }
     updates['jadwal_piket/' + id + '/selesai'] = true;
     updates['jadwal_piket/' + id + '/menungguVerifikasi'] = false;
-    updates['jadwal_piket/' + id + '/skorSelesai'] = skorBaru;
     updates['jadwal_piket/' + id + '/teguranCount'] = 0;
 
     // Simpan Hash Foto ke Riwayat untuk Anti-Cheat & Simpan Visual ke Galeri Riwayat Foto
@@ -842,7 +854,9 @@ document.getElementById('inputExcelData').addEventListener('change', function(e)
                         password: String(password),
                         selesai: false,
                         menungguVerifikasi: false,
-                        alpa: false
+                        alpa: false,
+                        foto: "", fotos: [], pesanAdmin: "", pesanUser: "", pesanDibaca: false,
+                        skorSelesai: 0, skorPelanggaran: 0, teguranCount: 0
                     });
                     berhasil++;
                 }

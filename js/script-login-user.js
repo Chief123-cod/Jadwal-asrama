@@ -92,7 +92,12 @@ window.prosesLoginUser = function() {
     }
 
     if (akunDitemukan) {
-        let dataSesi = { role: "user", phone: noUserFormat };
+        let userTheme = 'dark';
+        let foundRecord = dataJadwal.find(d => d.nowa === noUserFormat && d.password === passUser);
+        if (foundRecord && foundRecord.theme) {
+            userTheme = foundRecord.theme;
+        }
+        let dataSesi = { role: "user", phone: noUserFormat, theme: userTheme };
         sessionStorage.setItem("sesi_asrama", JSON.stringify(dataSesi));
         sessionStorage.setItem("last_activity", Date.now());
         munculNotif("Login Berhasil!", "#28a745");

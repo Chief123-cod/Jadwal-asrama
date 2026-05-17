@@ -364,7 +364,24 @@ function kompresGambar(file) {
 // Theme Toggle
 window.toggleTheme = function() {
     let isLight = document.documentElement.classList.toggle('light-mode');
-    localStorage.setItem('theme', isLight ? 'light' : 'dark');
+    let themeValue = isLight ? 'light' : 'dark';
+    
+    // Simpan ke Firebase
+    let itemUsers = dataJadwal.filter(d => d.nowa === currentUser.phone);
+    if (itemUsers.length > 0) {
+        let updates = {};
+        itemUsers.forEach(u => {
+            updates['jadwal_piket/' + u.id + '/theme'] = themeValue;
+        });
+        update(ref(db), updates);
+        
+        // Update session storage
+        let s = JSON.parse(sessionStorage.getItem("sesi_asrama"));
+        if(s) {
+            s.theme = themeValue;
+            sessionStorage.setItem("sesi_asrama", JSON.stringify(s));
+        }
+    }
 }
 
 // Broadcast Listener

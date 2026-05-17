@@ -56,11 +56,7 @@ function munculNotif(pesan, warna = "#333") {
     setTimeout(() => { toast.remove(); }, 3000);
 }
 
-// Theme Toggle
-window.toggleTheme = function() {
-    let isLight = document.documentElement.classList.toggle('light-mode');
-    localStorage.setItem('theme', isLight ? 'light' : 'dark');
-}
+
 
 // Logout
 window.logoutSistem = function() {
