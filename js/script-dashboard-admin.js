@@ -674,57 +674,6 @@ window.konfirmasiTolakBukti = function() {
     });
 }
 
-// Buka Galeri Riwayat Foto
-window.bukaRiwayatFoto = async function() {
-    let wadah = document.getElementById("galeriRiwayatList");
-    let msgKosong = document.getElementById("galeriRiwayatKosong");
-    wadah.innerHTML = "";
-    msgKosong.style.display = "none";
-
-    try {
-        munculNotif("Memuat galeri...", "#17a2b8");
-        let snapshot = await get(ref(db, 'riwayat_foto'));
-        if (!snapshot.exists()) {
-            msgKosong.style.display = "block";
-        } else {
-            let dataArr = [];
-            snapshot.forEach(child => {
-                dataArr.push({ id: child.key, ...child.val() });
-            });
-            
-            // Sort by Date Descending (Terbaru di atas)
-            dataArr.sort((a,b) => new Date(b.tanggal) - new Date(a.tanggal));
-
-            dataArr.forEach(item => {
-                let dateObj = new Date(item.tanggal);
-                let dateStr = dateObj.toLocaleDateString('id-ID', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
-                
-                let card = `
-                    <div style="background:var(--surface2); border:1px solid var(--border); border-radius:12px; overflow:hidden;">
-                        <img src="${item.foto}" style="width:100%; height:160px; object-fit:cover; display:block;" alt="Bukti Foto">
-                        <div style="padding:12px;">
-                            <div style="font-size:14px; font-weight:700; color:var(--text);">${item.nama}</div>
-                            <div style="font-size:12px; color:var(--text2); margin-top:4px;">${item.tugas}</div>
-                            <div style="font-size:11px; color:var(--text2); margin-top:8px; display:flex; justify-content:space-between;">
-                                <span>Kmr: ${item.kamar}</span>
-                                <span>${dateStr}</span>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                wadah.innerHTML += card;
-            });
-        }
-        document.getElementById("modalRiwayatFoto").style.display = "flex";
-    } catch (e) {
-        munculNotif("Gagal memuat galeri.", "#dc3545");
-        console.error(e);
-    }
-}
-
-window.tutupRiwayatFoto = function() {
-    document.getElementById("modalRiwayatFoto").style.display = "none";
-}
 
 // Export CSV
 window.exportCSV = function() {
