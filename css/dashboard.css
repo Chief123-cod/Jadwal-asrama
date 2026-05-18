@@ -95,6 +95,8 @@
     border-top-left-radius: 16px;
     border-top: 1px solid var(--border);
     border-left: 1px solid var(--border);
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
 }
 
 /* Topbar */
@@ -205,6 +207,8 @@
     border: 1px solid var(--border);
     border-radius: 20px;
     overflow: hidden;
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
 }
 
 .kamar-card-header {
@@ -770,6 +774,8 @@ tbody td {
         align-items: center !important;
         flex-wrap: wrap !important;
         margin-bottom: 14px !important;
+        -webkit-transform: translateZ(0);
+        transform: translateZ(0);
     }
     .mobile-filter-group > div:first-child {
         gap: 6px !important;
