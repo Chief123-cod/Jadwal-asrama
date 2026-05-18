@@ -109,7 +109,7 @@
     </main>
 </div>
 
-<input type="file" id="inputFoto" accept="image/*" multiple style="display: none;">
+<input type="file" id="inputFoto" accept="image/*" multiple style="display: none;" aria-label="Upload foto bukti">
 
 <!-- Modal: Profil User -->
 <div id="modalProfil" class="modal-overlay">
@@ -139,7 +139,7 @@
             
             <h4 style="font-size:13px; margin-bottom:10px; color:var(--text2);">Ganti Password</h4>
             <div class="form-group" style="margin-bottom:12px;">
-                <input type="text" id="profilPassBaru" placeholder="Masukkan password baru" style="width:100%; padding:11px 12px; background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text); font-size:14px; font-family:inherit; outline:none;">
+                <input type="text" id="profilPassBaru" placeholder="Masukkan password baru" aria-label="Password baru" style="width:100%; padding:11px 12px; background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text); font-size:14px; font-family:inherit; outline:none;">
             </div>
             <button class="btn-save" style="width:100%; margin:0; border-radius:var(--radius-sm);" onclick="simpanPassword()">Simpan Password</button>
         </div>
@@ -159,7 +159,7 @@
             <div id="previewImagesContainer" style="display:flex; gap:10px; overflow-x:auto; margin-bottom:16px; padding-bottom:8px;"></div>
             
             <label style="font-size:12px; font-weight:600; color:var(--text2); display:block; margin-bottom:6px;">Pesan untuk Admin (Opsional)</label>
-            <input type="text" id="pesanUploadUser" placeholder="Misal: Sudah bersih ya min" style="width:100%; padding:10px; border-radius:6px; border:1px solid var(--border); background:var(--surface2); color:var(--text); font-family:inherit; margin-bottom:16px; outline:none;">
+            <input type="text" id="pesanUploadUser" placeholder="Misal: Sudah bersih ya min" aria-label="Pesan upload" style="width:100%; padding:10px; border-radius:6px; border:1px solid var(--border); background:var(--surface2); color:var(--text); font-family:inherit; margin-bottom:16px; outline:none;">
             
             <button class="btn-save" id="btnConfirmUpload" style="width:100%; margin:0;">🚀 Kirim Sekarang</button>
         </div>

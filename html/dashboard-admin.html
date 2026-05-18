@@ -244,7 +244,7 @@
                             <circle cx="11" cy="11" r="8"></circle>
                             <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                         </svg>
-                        <input type="text" placeholder="Cari nama..." id="searchJadwal">
+                        <input type="text" placeholder="Cari nama..." id="searchJadwal" aria-label="Cari nama jadwal">
                     </div>
 
                     <div class="filter-selects" style="display:flex; gap:8px; flex-wrap:wrap;">
@@ -280,7 +280,7 @@
                         <button class="btn-tambah"
                             style="padding:8px 16px; margin:0; border-radius:8px; background:var(--surface2); color:var(--text); border:1px solid var(--border);"
                             onclick="document.getElementById('inputExcelData').click()">📂 Import Excel</button>
-                        <input type="file" id="inputExcelData" accept=".xlsx, .xls" style="display:none;">
+                        <input type="file" id="inputExcelData" accept=".xlsx, .xls" style="display:none;" aria-label="Upload file Excel">
                     </div>
                 </div>
             </div>
@@ -354,7 +354,7 @@
                 <button class="modal-close-x" onclick="tutupEdit()">✕</button>
             </div>
             <div class="info-box-data">
-                <input type="hidden" id="editId">
+                <input type="hidden" id="editId" aria-label="ID Edit">
                 <div class="form-group" style="margin-bottom:12px;">
                     <label for="editHari">Hari</label>
                     <select id="editHari">
@@ -380,19 +380,19 @@
                 </div>
                 <div class="form-group" style="margin-bottom:12px;">
                     <label for="editNama">Username</label>
-                    <input type="text" id="editNama">
+                    <input type="text" id="editNama" aria-label="Edit Nama">
                 </div>
                 <div class="form-group" style="margin-bottom:12px;">
                     <label for="editNowa">No. Handphone</label>
-                    <input type="text" inputmode="numeric" id="editNowa">
+                    <input type="text" inputmode="numeric" id="editNowa" aria-label="Edit Nomor WA">
                 </div>
                 <div class="form-group" style="margin-bottom:12px;">
                     <label for="editPassword">Password</label>
-                    <input type="text" id="editPassword">
+                    <input type="text" id="editPassword" aria-label="Edit Password">
                 </div>
                 <div class="form-group" style="margin-bottom:12px;">
                     <label for="editTugas">Tugas</label>
-                    <input type="text" id="editTugas">
+                    <input type="text" id="editTugas" aria-label="Edit Tugas">
                 </div>
             </div>
             <button class="btn-save" style="width:calc(100% - 32px); margin:0 16px 16px;" onclick="simpanEdit()">Simpan
