@@ -386,8 +386,28 @@ function renderLeaderboard() {
 // Theme & Broadcast
 window.toggleTheme = function() {
     let isLight = document.documentElement.classList.toggle('light-mode');
-    localStorage.setItem('theme', isLight ? 'light' : 'dark');
+    let themeValue = isLight ? 'light' : 'dark';
+    update(ref(db), { 'settings/admin_theme': themeValue });
+    let s = JSON.parse(sessionStorage.getItem("sesi_asrama"));
+    if (s) {
+        s.theme = themeValue;
+        sessionStorage.setItem("sesi_asrama", JSON.stringify(s));
+    }
 }
+
+onValue(ref(db, 'settings/admin_theme'), (snapshot) => {
+    let t = snapshot.val();
+    if (t === 'light') {
+        document.documentElement.classList.add('light-mode');
+    } else {
+        document.documentElement.classList.remove('light-mode');
+    }
+    let s = JSON.parse(sessionStorage.getItem("sesi_asrama"));
+    if (s) {
+        s.theme = t || 'dark';
+        sessionStorage.setItem("sesi_asrama", JSON.stringify(s));
+    }
+});
 
 window.bukaBroadcast = function() {
     document.getElementById("modalBroadcast").style.display = "flex";

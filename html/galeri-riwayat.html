@@ -14,7 +14,19 @@
     <link rel="stylesheet" href="../css/global.css">
     <link rel="stylesheet" href="../css/dashboard.css">
     <link rel="stylesheet" href="../css/galeri-riwayat.css">
-    <script>document.documentElement.classList.remove('light-mode');</script>
+    <script>
+        let sesi = sessionStorage.getItem('sesi_asrama');
+        if(sesi) {
+            let data = JSON.parse(sesi);
+            if(data.theme === 'light') {
+                document.documentElement.classList.add('light-mode');
+            } else {
+                document.documentElement.classList.remove('light-mode');
+            }
+        } else {
+            document.documentElement.classList.remove('light-mode');
+        }
+    </script>
 </head>
 
 <body>
@@ -163,9 +175,11 @@
                 if (overlay.classList.contains('active')) {
                     overlay.classList.remove('active');
                     setTimeout(() => overlay.style.display = 'none', 300);
+                    document.body.style.overflow = '';
                 } else {
                     overlay.style.display = 'block';
                     setTimeout(() => overlay.classList.add('active'), 10);
+                    document.body.style.overflow = 'hidden';
                 }
             } else {
                 let sidebar = document.getElementById('appSidebar');
@@ -184,6 +198,7 @@
                 let overlay = document.getElementById('mobileOverlay');
                 overlay.classList.remove('active');
                 setTimeout(() => overlay.style.display = 'none', 300);
+                document.body.style.overflow = '';
             }
         }
 
@@ -213,11 +228,7 @@
         });
     </script>
 
-    <script>
-        if (localStorage.getItem('theme') === 'light') {
-            document.documentElement.classList.add('light-mode');
-        }
-    </script>
+
 
     <script type="module" src="../js/script-galeri-riwayat.js"></script>
 

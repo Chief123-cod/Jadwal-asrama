@@ -2,6 +2,21 @@
 // SCRIPT-LOGIN-ADMIN.JS - Login Admin / Monitor
 // ===========================
 
+import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-database.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyDiErsXsXPqpMcmSNR5JFMGBkPx_VRbYfA",
+    authDomain: "jadwal-piket-asrama.firebaseapp.com",
+    databaseURL: "https://jadwal-piket-asrama-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "jadwal-piket-asrama",
+    storageBucket: "jadwal-piket-asrama.firebasestorage.app",
+    messagingSenderId: "579608879505",
+    appId: "1:579608879505:web:3d49c5af2ed3fb5ae20663"
+};
+const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
 const PASS_BENAR = "12345678";
 
 // Cek sesi, jika sudah login redirect
@@ -33,10 +48,10 @@ function munculNotif(pesan, warna = "#333") {
 
 // Login Admin
 document.getElementById("inputPassAdmin").addEventListener("keydown", function (e) {
-    if (e.key === "Enter") prosesLoginAdmin();
+    if (e.key === "Enter") window.prosesLoginAdmin();
 });
 
-window.prosesLoginAdmin = function () {
+window.prosesLoginAdmin = async function () {
     let pass = document.getElementById("inputPassAdmin").value.trim();
     if (!pass) {
         munculNotif("Password harus diisi!", "#ff9800");
@@ -44,7 +59,14 @@ window.prosesLoginAdmin = function () {
         return;
     }
     if (pass === PASS_BENAR) {
-        let dataSesi = { role: "admin" };
+        // Ambil tema admin dari Firebase
+        let adminTheme = 'dark';
+        try {
+            let snap = await get(ref(db, 'settings/admin_theme'));
+            if (snap.exists()) adminTheme = snap.val();
+        } catch(e) { /* default dark */ }
+
+        let dataSesi = { role: "admin", theme: adminTheme };
         sessionStorage.setItem("sesi_asrama", JSON.stringify(dataSesi));
         sessionStorage.setItem("last_activity", Date.now());
         sessionStorage.setItem("showGreetingOnce", "true");
@@ -56,3 +78,4 @@ window.prosesLoginAdmin = function () {
         munculNotif("Password Admin Salah!", "#dc3545");
     }
 }
+
