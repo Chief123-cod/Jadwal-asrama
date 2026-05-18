@@ -16,7 +16,13 @@
         let sesi = sessionStorage.getItem('sesi_asrama');
         if(sesi) {
             let data = JSON.parse(sesi);
-            if(data.theme === 'light') document.documentElement.classList.add('light-mode');
+            if(data.theme === 'light') {
+                document.documentElement.classList.add('light-mode');
+            } else {
+                document.documentElement.classList.remove('light-mode');
+            }
+        } else {
+            document.documentElement.classList.remove('light-mode');
         }
     </script>
 </head>
