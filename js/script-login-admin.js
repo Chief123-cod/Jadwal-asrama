@@ -2,22 +2,20 @@
 // SCRIPT-LOGIN-ADMIN.JS - Login Admin / Monitor
 // ===========================
 
-import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
-import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-database.js";
+import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-database.js";
 
 const firebaseConfig = {
-    apiKey: "AIzaSyDiErsXsXPqpMcmSNR5JFMGBkPx_VRbYfA",
-    authDomain: "jadwal-piket-asrama.firebaseapp.com",
-    databaseURL: "https://jadwal-piket-asrama-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "jadwal-piket-asrama",
-    storageBucket: "jadwal-piket-asrama.firebasestorage.app",
-    messagingSenderId: "579608879505",
-    appId: "1:579608879505:web:3d49c5af2ed3fb5ae20663"
+    apiKey: "AIzaSyAhGYIASP-WiFdWW_JI8ZDmxAzMynR8orc",
+    authDomain: "jadwal-asrama.firebaseapp.com",
+    databaseURL: "https://jadwal-asrama-default-rtdb.firebaseio.com",
+    projectId: "jadwal-asrama",
+    storageBucket: "jadwal-asrama.firebasestorage.app",
+    messagingSenderId: "831067402841",
+    appId: "1:831067402841:web:c5e7198d96b48e0a5ab748"
 };
 const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
 const db = getDatabase(app);
-
-const PASS_BENAR = "12345678";
 
 // Cek sesi, jika sudah login redirect
 let sesi = sessionStorage.getItem("sesi_asrama");
@@ -58,24 +56,41 @@ window.prosesLoginAdmin = async function () {
         document.getElementById("inputPassAdmin").focus();
         return;
     }
-    if (pass === PASS_BENAR) {
-        // Ambil tema admin dari Firebase
-        let adminTheme = 'dark';
-        try {
-            let snap = await get(ref(db, 'settings/admin_theme'));
-            if (snap.exists()) adminTheme = snap.val();
-        } catch(e) { /* default dark */ }
 
-        let dataSesi = { role: "admin", theme: adminTheme };
-        sessionStorage.setItem("sesi_asrama", JSON.stringify(dataSesi));
-        sessionStorage.setItem("last_activity", Date.now());
-        sessionStorage.setItem("showGreetingOnce", "true");
+    try {
+        // Ambil password admin dari Firebase
+        let snapPass = await get(ref(db, 'settings/admin_password'));
+        
+        // Jika belum ada password di database, buat default
+        if (!snapPass.exists()) {
+            await set(ref(db, 'settings/admin_password'), 'GHClean2026');
+            snapPass = await get(ref(db, 'settings/admin_password'));
+        }
 
-        munculNotif("Berhasil Masuk! Mengalihkan...", "#28a745");
-        document.getElementById("inputPassAdmin").value = "";
-        setTimeout(() => { window.location.href = "dashboard-admin.html"; }, 500);
-    } else {
-        munculNotif("Password Admin Salah!", "#dc3545");
+        let passwordDB = snapPass.val();
+
+        if (pass === passwordDB) {
+            // Ambil tema admin dari Firebase
+            let adminTheme = 'dark';
+            try {
+                let snapTheme = await get(ref(db, 'settings/admin_theme'));
+                if (snapTheme.exists()) adminTheme = snapTheme.val();
+            } catch(e) { /* default dark */ }
+
+            let dataSesi = { role: "admin", theme: adminTheme };
+            sessionStorage.setItem("sesi_asrama", JSON.stringify(dataSesi));
+            sessionStorage.setItem("last_activity", Date.now());
+            sessionStorage.setItem("showGreetingOnce", "true");
+
+            munculNotif("Berhasil Masuk! Mengalihkan...", "#28a745");
+            document.getElementById("inputPassAdmin").value = "";
+            setTimeout(() => { window.location.href = "dashboard-admin.html"; }, 500);
+        } else {
+            munculNotif("Password Admin Salah!", "#dc3545");
+        }
+    } catch (error) {
+        munculNotif("Gagal menghubungi server. Periksa koneksi internet.", "#dc3545");
+        console.error("Login error:", error);
     }
 }
 
