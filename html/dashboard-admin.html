@@ -138,7 +138,7 @@
                         </svg>
                         <span>Leaderboard</span>
                     </a>
-                    <a href="javascript:void(0)" class="sidebar-item" onclick="bukaPengaturan()" title="Pengaturan Sistem">
+                    <a href="pengaturan.html" class="sidebar-item" title="Pengaturan Sistem">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <circle cx="12" cy="12" r="3"></circle>
                             <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
@@ -482,32 +482,7 @@
         </div>
     </div>
 
-    <!-- Modal Pengaturan Sistem -->
-    <div id="modalPengaturan" class="modal-overlay">
-        <div class="modal-box">
-            <div class="modal-header-bar">
-                <h3>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="3"></circle>
-                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-                    </svg>
-                    Pengaturan Sistem
-                </h3>
-                <button class="modal-close-x" onclick="tutupPengaturan()">✕</button>
-            </div>
-            <div style="padding:16px;">
-                <div class="form-group" style="margin-bottom:12px;">
-                    <label for="jamMulai" style="font-size:12px; font-weight:600; color:var(--text); display:block; margin-bottom:6px;">Jam Mulai Pengiriman Bukti</label>
-                    <input type="time" id="jamMulai" style="width:100%; padding:10px; border-radius:6px; border:1px solid var(--border); background:var(--surface2); color:var(--text); font-family:inherit; outline:none;">
-                </div>
-                <div class="form-group" style="margin-bottom:16px;">
-                    <label for="jamSelesai" style="font-size:12px; font-weight:600; color:var(--text); display:block; margin-bottom:6px;">Jam Selesai (Batas Waktu)</label>
-                    <input type="time" id="jamSelesai" style="width:100%; padding:10px; border-radius:6px; border:1px solid var(--border); background:var(--surface2); color:var(--text); font-family:inherit; outline:none;">
-                </div>
-                <button class="btn-save" style="width:100%; margin:0;" onclick="simpanPengaturan()">Simpan Pengaturan</button>
-            </div>
-        </div>
-    </div>    <!-- Modal: Alasan Penolakan Bukti -->
+    <!-- Modal: Alasan Penolakan Bukti -->
     <div id="modalTolakBukti" class="modal-overlay">
         <div class="modal-box" style="max-width: 400px;">
             <div class="modal-header-bar modal-header-warning">

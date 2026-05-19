@@ -9,13 +9,14 @@ let currentUser = null;
 let dataJadwal = [];
 let idSedangUpload = null;
 let idBacaPesan = null;
-let systemSettings = { jamMulai: "05:00", jamSelesai: "19:00" };
+let systemSettings = { jamMulai: "05:00", jamSelesai: "19:00", wajibKamera: false };
 
 onValue(ref(db, 'settings'), (snapshot) => {
     let s = snapshot.val();
     if(s) {
         systemSettings.jamMulai = s.jamMulai || "05:00";
         systemSettings.jamSelesai = s.jamSelesai || "19:00";
+        systemSettings.wajibKamera = s.wajibKamera || false;
         if(currentUser) renderTabel();
     }
 });
@@ -388,7 +389,13 @@ window.bukaKamera = function(id) {
         return;
     }
     idSedangUpload = id;
-    document.getElementById("inputFoto").click();
+    let inputFoto = document.getElementById("inputFoto");
+    if (systemSettings.wajibKamera) {
+        inputFoto.setAttribute("capture", "environment");
+    } else {
+        inputFoto.removeAttribute("capture");
+    }
+    inputFoto.click();
 }
 
 function kompresGambar(file) {
