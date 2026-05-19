@@ -10,6 +10,12 @@ const LINK_WEB_KAMU = "https://chief123-cod.github.io/Jadwal-asrama/";
 let currentUser = null;
 let dataJadwal = [];
 
+// Urutan hari untuk sorting (Senin = 0, Minggu = 6)
+const URUTAN_HARI = { "Senin": 0, "Selasa": 1, "Rabu": 2, "Kamis": 3, "Jumat": 4, "Sabtu": 5, "Minggu": 6 };
+function sortByHari(arr) {
+    return arr.sort((a, b) => (URUTAN_HARI[a.hari] ?? 99) - (URUTAN_HARI[b.hari] ?? 99));
+}
+
 // Cek sesi login
 let sesi = sessionStorage.getItem("sesi_asrama");
 if (!sesi) {
@@ -246,7 +252,7 @@ function renderTabel() {
     let gridHTML = '<div class="kamar-grid">';
 
     sortedKamarKeys.forEach(namaKamar => {
-        let items = kamarGroups[namaKamar];
+        let items = sortByHari([...kamarGroups[namaKamar]]);
         let selesaiCount = items.filter(i => i.selesai).length;
         let allDone = items.length > 0 && selesaiCount === items.length;
         let hasPending = items.some(i => i.menungguVerifikasi && !i.selesai);
@@ -465,6 +471,8 @@ onValue(ref(db, 'jadwal_piket'), (snapshot) => {
     snapshot.forEach((childSnapshot) => {
         dataJadwal.push({ id: childSnapshot.key, ...childSnapshot.val() });
     });
+    // Urutkan data berdasarkan hari (Senin→Minggu)
+    sortByHari(dataJadwal);
     if (currentUser != null) { renderTabel(); }
 });
 

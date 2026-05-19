@@ -44,6 +44,33 @@ onValue(ref(db, 'jadwal_piket'), (snapshot) => {
     });
 });
 
+// Toggle Password Visibility
+(function() {
+    const passInput = document.getElementById("inputPassUser");
+    const toggleBtn = document.getElementById("togglePassUser");
+    if (!passInput || !toggleBtn) return;
+
+    passInput.addEventListener("input", function() {
+        if (this.value.length > 0) {
+            toggleBtn.classList.add("visible");
+        } else {
+            toggleBtn.classList.remove("visible");
+            this.type = "password";
+            toggleBtn.querySelector(".eye-open").style.display = "";
+            toggleBtn.querySelector(".eye-closed").style.display = "none";
+        }
+    });
+
+    toggleBtn.addEventListener("click", function(e) {
+        e.preventDefault();
+        const isPassword = passInput.type === "password";
+        passInput.type = isPassword ? "text" : "password";
+        this.querySelector(".eye-open").style.display = isPassword ? "none" : "";
+        this.querySelector(".eye-closed").style.display = isPassword ? "" : "none";
+        passInput.focus();
+    });
+})();
+
 // Login User
 document.getElementById("inputNoUser").addEventListener("keydown", function(e) {
     if (e.key === "Enter") {

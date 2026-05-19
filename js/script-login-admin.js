@@ -44,6 +44,33 @@ function munculNotif(pesan, warna = "#333") {
     setTimeout(() => { toast.remove(); }, 3000);
 }
 
+// Toggle Password Visibility
+(function() {
+    const passInput = document.getElementById("inputPassAdmin");
+    const toggleBtn = document.getElementById("togglePassAdmin");
+    if (!passInput || !toggleBtn) return;
+
+    passInput.addEventListener("input", function() {
+        if (this.value.length > 0) {
+            toggleBtn.classList.add("visible");
+        } else {
+            toggleBtn.classList.remove("visible");
+            this.type = "password";
+            toggleBtn.querySelector(".eye-open").style.display = "";
+            toggleBtn.querySelector(".eye-closed").style.display = "none";
+        }
+    });
+
+    toggleBtn.addEventListener("click", function(e) {
+        e.preventDefault();
+        const isPassword = passInput.type === "password";
+        passInput.type = isPassword ? "text" : "password";
+        this.querySelector(".eye-open").style.display = isPassword ? "none" : "";
+        this.querySelector(".eye-closed").style.display = isPassword ? "" : "none";
+        passInput.focus();
+    });
+})();
+
 // Login Admin
 document.getElementById("inputPassAdmin").addEventListener("keydown", function (e) {
     if (e.key === "Enter") window.prosesLoginAdmin();
