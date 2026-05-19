@@ -468,8 +468,8 @@ onValue(ref(db, 'jadwal_piket'), (snapshot) => {
     if (currentUser != null) { renderTabel(); }
 });
 
-// Admin: Tambah Data Jadwal
-window.tambahData = function() {
+// Admin: Tambah Data Jadwal (Validasi langsung dari Firebase untuk anti-duplikat)
+window.tambahData = async function() {
     let hari     = document.getElementById("hari").value;
     let kamar    = document.getElementById("kamar").value;
     let nama     = document.getElementById("nama").value.trim();
@@ -487,6 +487,36 @@ window.tambahData = function() {
         nowaFormat = "62" + nowaFormat.substring(1);
     }
 
+    // Cek duplikat langsung dari Firebase (bukan array lokal) untuk mencegah race condition
+    try {
+        let snapshot = await get(ref(db, 'jadwal_piket'));
+        if (snapshot.exists()) {
+            let duplikatNomor = false;
+            let duplikatJadwal = false;
+            snapshot.forEach(child => {
+                let data = child.val();
+                if (data.nowa === nowaFormat) {
+                    duplikatNomor = true;
+                }
+                if (data.hari === hari && data.kamar === kamar) {
+                    duplikatJadwal = true;
+                }
+            });
+            if (duplikatNomor) {
+                munculNotif("Nomor HP ini sudah terdaftar! Gunakan nomor lain.", "#dc3545");
+                return;
+            }
+            if (duplikatJadwal) {
+                munculNotif(`${kamar} sudah ada jadwal piket di hari ${hari}! Pilih hari atau kamar lain.`, "#dc3545");
+                return;
+            }
+        }
+    } catch (err) {
+        console.error("Gagal mengecek duplikat:", err);
+        munculNotif("Gagal mengecek data. Coba lagi.", "#dc3545");
+        return;
+    }
+
     push(ref(db, 'jadwal_piket'), {
         hari: hari, kamar: kamar, nama: nama, nowa: nowaFormat, password: passAkun, tugas: tugas,
         selesai: false, foto: "", fotos: [], pesanAdmin: "", pesanUser: "", pesanDibaca: false, skorSelesai: 0, skorPelanggaran: 0, teguranCount: 0
@@ -498,6 +528,9 @@ window.tambahData = function() {
         document.getElementById("passAkunUser").value = "";
         document.getElementById("tugas").value = "";
         munculNotif("Jadwal & Akses Login User Tersimpan!", "#28a745");
+    }).catch((err) => {
+        munculNotif("Gagal menyimpan data. Coba lagi.", "#dc3545");
+        console.error(err);
     });
 }
 
@@ -555,6 +588,20 @@ window.simpanEdit = function() {
         return;
     }
     let nowaFormat = nowaRaw.startsWith("0") ? "62" + nowaRaw.substring(1) : nowaRaw;
+
+    // Cek duplikat nomor HP (kecuali data sendiri)
+    let duplikatNomor = dataJadwal.some(item => item.id !== id && item.nowa === nowaFormat);
+    if (duplikatNomor) {
+        munculNotif("Nomor HP ini sudah dipakai oleh user lain! Gunakan nomor lain.", "#dc3545");
+        return;
+    }
+
+    // Cek duplikat kombinasi Hari + Kamar (kecuali data sendiri)
+    let duplikatJadwal = dataJadwal.some(item => item.id !== id && item.hari === hari && item.kamar === kamar);
+    if (duplikatJadwal) {
+        munculNotif(`${kamar} sudah ada jadwal piket di hari ${hari}! Pilih hari atau kamar lain.`, "#dc3545");
+        return;
+    }
 
     update(ref(db, 'jadwal_piket/' + id), {
         hari: hari, kamar: kamar, nama: nama, nowa: nowaFormat, password: passAkun, tugas: tugas
@@ -714,13 +761,14 @@ window.exportCSV = function() {
         return;
     }
     let csvContent = "data:text/csv;charset=utf-8,";
-    csvContent += "Hari,Nama,No HP,Tugas,Status,Poin Selesai\n";
+    csvContent += "Hari,Kamar,Nama,No HP,Tugas,Status,Poin Selesai\n";
     dataJadwal.forEach(row => {
         let status = row.selesai ? "Selesai" : (row.menungguVerifikasi ? "Menunggu Verifikasi" : "Belum");
         let safeNama = row.nama.replace(/,/g, " ");
+        let safeKamar = (row.kamar || "").replace(/,/g, " ");
         let safeTugas = row.tugas.replace(/,/g, " ");
         let poin = row.skorSelesai || 0;
-        csvContent += `${row.hari},${safeNama},${row.nowa},${safeTugas},${status},${poin}\n`;
+        csvContent += `${row.hari},${safeKamar},${safeNama},${row.nowa},${safeTugas},${status},${poin}\n`;
     });
     let encodedUri = encodeURI(csvContent);
     let link = document.createElement("a");
@@ -828,8 +876,8 @@ window.exportPDF = function() {
     munculNotif("File PDF berhasil didownload!", "#28a745");
 }
 
-// Fitur 4: Import Excel
-document.getElementById('inputExcelData').addEventListener('change', function(e) {
+// Fitur 4: Import Excel (Dengan Validasi Duplikat)
+document.getElementById('inputExcelData').addEventListener('change', async function(e) {
     let file = e.target.files[0];
     if (!file) return;
     
@@ -837,7 +885,7 @@ document.getElementById('inputExcelData').addEventListener('change', function(e)
     munculNotif("Membaca file Excel...", "#17a2b8");
 
     let reader = new FileReader();
-    reader.onload = function(evt) {
+    reader.onload = async function(evt) {
         try {
             let data = evt.target.result;
             let workbook = XLSX.read(data, {type: 'binary'});
@@ -850,8 +898,29 @@ document.getElementById('inputExcelData').addEventListener('change', function(e)
                 return;
             }
 
+            // Ambil data existing dari Firebase untuk validasi duplikat
+            let existingNowa = new Set();
+            let existingJadwal = new Set();
+            try {
+                let snapshot = await get(ref(db, 'jadwal_piket'));
+                if (snapshot.exists()) {
+                    snapshot.forEach(child => {
+                        let d = child.val();
+                        existingNowa.add(d.nowa);
+                        existingJadwal.add(d.hari + '|' + d.kamar);
+                    });
+                }
+            } catch (err) {
+                console.error("Gagal mengecek data existing:", err);
+                munculNotif("Gagal mengecek data existing. Coba lagi.", "#dc3545");
+                return;
+            }
+
             let berhasil = 0;
-            jsonData.forEach(row => {
+            let dilewati = 0;
+            let alasanLewat = [];
+
+            for (let row of jsonData) {
                 let nama = row.Nama || row.nama || row.NAMA;
                 let kamar = row.Kamar || row.kamar || row.KAMAR;
                 let nowa = row.No_WA || row.NoWA || row.no_wa || row.nowa || row['No WA'] || row['NO WA'];
@@ -864,10 +933,26 @@ document.getElementById('inputExcelData').addEventListener('change', function(e)
                     if (formattedNowa.startsWith("0")) {
                         formattedNowa = "62" + formattedNowa.substring(1);
                     }
+                    let kamarStr = kamar ? String(kamar) : "Belum dipilih";
+                    let jadwalKey = hari + '|' + kamarStr;
 
-                    push(ref(db, 'jadwal_piket'), {
+                    // Validasi duplikat nomor HP
+                    if (existingNowa.has(formattedNowa)) {
+                        dilewati++;
+                        alasanLewat.push(`${nama} - HP sudah terdaftar`);
+                        continue;
+                    }
+
+                    // Validasi duplikat Hari + Kamar
+                    if (existingJadwal.has(jadwalKey)) {
+                        dilewati++;
+                        alasanLewat.push(`${nama} - ${kamarStr} hari ${hari} sudah ada`);
+                        continue;
+                    }
+
+                    await push(ref(db, 'jadwal_piket'), {
                         nama: nama,
-                        kamar: kamar ? String(kamar) : "Belum dipilih",
+                        kamar: kamarStr,
                         tugas: tugas,
                         hari: hari,
                         nowa: formattedNowa,
@@ -878,12 +963,22 @@ document.getElementById('inputExcelData').addEventListener('change', function(e)
                         foto: "", fotos: [], pesanAdmin: "", pesanUser: "", pesanDibaca: false,
                         skorSelesai: 0, skorPelanggaran: 0, teguranCount: 0
                     });
+
+                    // Tambah ke set agar baris berikutnya di Excel juga dicek
+                    existingNowa.add(formattedNowa);
+                    existingJadwal.add(jadwalKey);
                     berhasil++;
                 }
-            });
+            }
 
-            if (berhasil > 0) {
+            if (berhasil > 0 && dilewati > 0) {
+                munculNotif(`Import: ${berhasil} berhasil, ${dilewati} dilewati (duplikat).`, "#ff9800");
+                console.log("Data dilewati karena duplikat:", alasanLewat);
+            } else if (berhasil > 0) {
                 munculNotif(`Berhasil import ${berhasil} jadwal dari Excel!`, "#28a745");
+            } else if (dilewati > 0) {
+                munculNotif(`Semua ${dilewati} data dilewati karena duplikat!`, "#dc3545");
+                console.log("Data dilewati karena duplikat:", alasanLewat);
             } else {
                 munculNotif("Tidak ada data valid yang bisa diimport. Pastikan kolom Nama, No WA, Hari, Tugas ada.", "#ff9800");
             }

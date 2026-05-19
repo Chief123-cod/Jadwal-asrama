@@ -67,7 +67,7 @@ window.logoutSistem = function() {
 }
 
 // Tambah Data Jadwal
-window.tambahData = function() {
+window.tambahData = async function() {
     let hari     = document.getElementById("hari").value;
     let kamar    = document.getElementById("kamar").value;
     let nama     = document.getElementById("nama").value.trim();
@@ -83,6 +83,36 @@ window.tambahData = function() {
     let nowaFormat = nowaRaw;
     if (nowaFormat.startsWith("0")) {
         nowaFormat = "62" + nowaFormat.substring(1);
+    }
+
+    // Cek duplikat nomor HP & kombinasi Hari+Kamar di database
+    try {
+        let snapshot = await get(ref(db, 'jadwal_piket'));
+        if (snapshot.exists()) {
+            let duplikatNomor = false;
+            let duplikatJadwal = false;
+            snapshot.forEach(child => {
+                let data = child.val();
+                if (data.nowa === nowaFormat) {
+                    duplikatNomor = true;
+                }
+                if (data.hari === hari && data.kamar === kamar) {
+                    duplikatJadwal = true;
+                }
+            });
+            if (duplikatNomor) {
+                munculNotif("Nomor HP ini sudah terdaftar! Gunakan nomor lain.", "#dc3545");
+                return;
+            }
+            if (duplikatJadwal) {
+                munculNotif(`${kamar} sudah ada jadwal piket di hari ${hari}! Pilih hari atau kamar lain.`, "#dc3545");
+                return;
+            }
+        }
+    } catch (err) {
+        console.error("Gagal mengecek duplikat:", err);
+        munculNotif("Gagal mengecek data. Coba lagi.", "#dc3545");
+        return;
     }
 
     push(ref(db, 'jadwal_piket'), {
