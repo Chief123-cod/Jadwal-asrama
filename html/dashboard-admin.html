@@ -266,6 +266,16 @@
                             <option value="Menunggu">Menunggu</option>
                             <option value="Belum">Belum</option>
                         </select>
+                        <select id="filterKamar"
+                            style="padding:8px 12px; border-radius:8px; border:1px solid var(--border); background:var(--surface2); color:var(--text); font-size:13px; outline:none; cursor:pointer;">
+                            <option value="Semua">Semua Kamar</option>
+                            <option value="Kamar 1">Kamar 1</option>
+                            <option value="Kamar 2">Kamar 2</option>
+                            <option value="Kamar 3">Kamar 3</option>
+                            <option value="Kamar 4">Kamar 4</option>
+                            <option value="Kamar 5">Kamar 5</option>
+                            <option value="Kamar 6">Kamar 6</option>
+                        </select>
                     </div>
 
                     <div style="flex-grow:1;"></div>
@@ -451,7 +461,7 @@
                 <button class="modal-close-x" onclick="tutupBroadcast()">✕</button>
             </div>
             <div style="padding:16px;">
-                <label
+                <label for="teksBroadcast"
                     style="font-size:12px; font-weight:600; color:var(--text2); display:block; margin-bottom:6px;">Isi
                     Pengumuman (Tampil di semua dashboard user)</label>
                 <textarea id="teksBroadcast" rows="4" placeholder="Ketik pengumuman di sini..."
@@ -486,7 +496,7 @@
                     onclick="document.getElementById('modalTolakBukti').style.display='none'">✕</button>
             </div>
             <div style="padding:20px;">
-                <label
+                <label for="inputAlasanTolak"
                     style="font-size:14px; font-weight:600; color:var(--text); display:block; margin-bottom:8px;">Alasan
                     menolak bukti ini:</label>
                 <textarea id="inputAlasanTolak" rows="3" placeholder="Masukkan alasan di sini..."

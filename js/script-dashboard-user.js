@@ -3,7 +3,7 @@
 // ===========================
 
 import { db } from "./database.js";
-import { ref, onValue, update, get } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-database.js";
+import { ref, onValue, update, get } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-database.js";
 
 let currentUser = null;
 let dataJadwal = [];
@@ -63,7 +63,7 @@ function munculNotif(pesan, warna = "#333") {
     else if (warna === "#dc3545" || warna === "#ff4d4d") borderColor = 'var(--red)';
     else if (warna === "#ff9800") borderColor = 'var(--orange)';
     else if (warna === "#17a2b8") borderColor = 'var(--cyan)';
-    toast.style.borderColor = borderColor;
+    toast.style.borderLeftColor = borderColor;
     toast.innerText = pesan;
     toastBox.appendChild(toast);
     setTimeout(() => { toast.remove(); }, 3000);
@@ -358,8 +358,8 @@ function kompresGambar(file) {
             img.onload = function() {
                 let canvas = document.createElement("canvas");
                 let MAX_WIDTH = 800;
-                let scaleSize = MAX_WIDTH / img.width;
-                canvas.width = MAX_WIDTH;
+                let scaleSize = img.width > MAX_WIDTH ? MAX_WIDTH / img.width : 1;
+                canvas.width = img.width > MAX_WIDTH ? MAX_WIDTH : img.width;
                 canvas.height = img.height * scaleSize;
                 let ctx = canvas.getContext("2d");
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);

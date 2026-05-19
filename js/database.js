@@ -2,8 +2,8 @@
 // DATABASE.JS - Konfigurasi Firebase
 // ==================================
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
-import { getDatabase } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-database.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+import { getDatabase } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-database.js";
 
 // Konfigurasi Firebase Project
 const firebaseConfig = {

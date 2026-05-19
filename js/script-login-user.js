@@ -3,7 +3,7 @@
 // ===========================
 
 import { db } from "./database.js";
-import { ref, onValue } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-database.js";
+import { ref, onValue } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-database.js";
 
 let dataJadwal = [];
 let dataSudahDimuat = false;
@@ -29,7 +29,7 @@ function munculNotif(pesan, warna = "#333") {
     else if (warna === "#dc3545" || warna === "#ff4d4d") borderColor = 'var(--red)';
     else if (warna === "#ff9800") borderColor = 'var(--orange)';
     else if (warna === "#17a2b8") borderColor = 'var(--cyan)';
-    toast.style.borderColor = borderColor;
+    toast.style.borderLeftColor = borderColor;
     toast.innerText = pesan;
     toastBox.appendChild(toast);
     setTimeout(() => { toast.remove(); }, 3000);

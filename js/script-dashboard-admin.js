@@ -3,7 +3,7 @@
 // ===========================
 
 import { db } from "./database.js";
-import { ref, push, onValue, remove, update, get } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-database.js";
+import { ref, push, onValue, remove, update, get } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-database.js";
 
 const LINK_WEB_KAMU = "https://chief123-cod.github.io/Jadwal-asrama/";
 
@@ -153,7 +153,7 @@ function munculNotif(pesan, warna = "#333") {
     else if (warna === "#dc3545" || warna === "#ff4d4d") borderColor = 'var(--red)';
     else if (warna === "#ff9800") borderColor = 'var(--orange)';
     else if (warna === "#17a2b8") borderColor = 'var(--cyan)';
-    toast.style.borderColor = borderColor;
+    toast.style.borderLeftColor = borderColor;
     toast.innerText = pesan;
     toastBox.appendChild(toast);
     setTimeout(() => { toast.remove(); }, 3000);
@@ -201,7 +201,7 @@ function renderTabel() {
     let kamarVal = document.getElementById("filterKamar") ? document.getElementById("filterKamar").value : "Semua";
 
     let filteredData = dataJadwal.filter(item => {
-        let matchSearch = item.nama.toLowerCase().includes(searchVal) || item.tugas.toLowerCase().includes(searchVal);
+        let matchSearch = (item.nama || "").toLowerCase().includes(searchVal) || (item.tugas || "").toLowerCase().includes(searchVal);
         let matchHari = (hariVal === "Semua" || item.hari === hariVal);
         let matchKamar = (kamarVal === "Semua" || item.kamar === kamarVal);
         
@@ -476,75 +476,10 @@ onValue(ref(db, 'jadwal_piket'), (snapshot) => {
     if (currentUser != null) { renderTabel(); }
 });
 
-// Admin: Tambah Data Jadwal (Validasi langsung dari Firebase untuk anti-duplikat)
-window.tambahData = async function() {
-    let hari     = document.getElementById("hari").value;
-    let kamar    = document.getElementById("kamar").value;
-    let nama     = document.getElementById("nama").value.trim();
-    let nowaRaw  = document.getElementById("nowa").value.replace(/[^0-9]/g, '');
-    let passAkun = document.getElementById("passAkunUser").value.trim();
-    let tugas    = document.getElementById("tugas").value.trim();
-
-    if (!hari || !kamar || !nama || !nowaRaw || !passAkun || !tugas) {
-        munculNotif("Harap masukkan semua inputan (Termasuk Kamar)", "#ff9800");
-        return;
-    }
-
-    let nowaFormat = nowaRaw;
-    if (nowaFormat.startsWith("0")) {
-        nowaFormat = "62" + nowaFormat.substring(1);
-    }
-
-    // Cek duplikat langsung dari Firebase (bukan array lokal) untuk mencegah race condition
-    try {
-        let snapshot = await get(ref(db, 'jadwal_piket'));
-        if (snapshot.exists()) {
-            let duplikatNomor = false;
-            let duplikatJadwal = false;
-            snapshot.forEach(child => {
-                let data = child.val();
-                if (data.nowa === nowaFormat) {
-                    duplikatNomor = true;
-                }
-                if (data.hari === hari && data.kamar === kamar) {
-                    duplikatJadwal = true;
-                }
-            });
-            if (duplikatNomor) {
-                munculNotif("Nomor HP ini sudah terdaftar! Gunakan nomor lain.", "#dc3545");
-                return;
-            }
-            if (duplikatJadwal) {
-                munculNotif(`${kamar} sudah ada jadwal piket di hari ${hari}! Pilih hari atau kamar lain.`, "#dc3545");
-                return;
-            }
-        }
-    } catch (err) {
-        console.error("Gagal mengecek duplikat:", err);
-        munculNotif("Gagal mengecek data. Coba lagi.", "#dc3545");
-        return;
-    }
-
-    push(ref(db, 'jadwal_piket'), {
-        hari: hari, kamar: kamar, nama: nama, nowa: nowaFormat, password: passAkun, tugas: tugas,
-        selesai: false, foto: "", fotos: [], pesanAdmin: "", pesanUser: "", pesanDibaca: false, skorSelesai: 0, skorPelanggaran: 0, teguranCount: 0
-    }).then(() => {
-        document.getElementById("hari").value = "";
-        document.getElementById("kamar").value = "";
-        document.getElementById("nama").value = "";
-        document.getElementById("nowa").value = "";
-        document.getElementById("passAkunUser").value = "";
-        document.getElementById("tugas").value = "";
-        munculNotif("Jadwal & Akses Login User Tersimpan!", "#28a745");
-    }).catch((err) => {
-        munculNotif("Gagal menyimpan data. Coba lagi.", "#dc3545");
-        console.error(err);
-    });
-}
-
 // Info Akun User (Modal 'i')
 window.bukaInfo = function(id) {
     let data = dataJadwal.find(d => d.id === id);
+    if (!data) { munculNotif("Data tidak ditemukan!", "#dc3545"); return; }
     let noTampil = data.nowa.startsWith("62") ? "0" + data.nowa.substring(2) : data.nowa;
     document.getElementById("infoNama").innerText = data.nama;
     document.getElementById("infoNomor").innerText = noTampil;
@@ -568,6 +503,7 @@ window.hapusData = function(id) {
 // Edit Data Jadwal
 window.editData = function(id) {
     let data = dataJadwal.find(d => d.id === id);
+    if (!data) { munculNotif("Data tidak ditemukan!", "#dc3545"); return; }
     document.getElementById("editId").value = id;
     document.getElementById("editHari").value = data.hari;
     if (data.kamar) document.getElementById("editKamar").value = data.kamar;
@@ -622,6 +558,7 @@ window.simpanEdit = function() {
 // Kirim Info via WhatsApp
 window.kirimWA = function(id) {
     let data = dataJadwal.find(d => d.id === id);
+    if (!data) { munculNotif("Data tidak ditemukan!", "#dc3545"); return; }
     let noTampil = data.nowa.startsWith("62") ? "0" + data.nowa.substring(2) : data.nowa;
     let pesan = `Halo ${data.nama}! 👋\nJangan lupa, kamu ada jadwal piket asrama hari *${data.hari}* dengan tugas *${data.tugas}*.\nAkun kamu:\nNomor: ${noTampil}\nPassword: ${data.password}\n${LINK_WEB_KAMU}`;
     window.open(`https://wa.me/${data.nowa}?text=${encodeURIComponent(pesan)}`, '_blank');
@@ -631,6 +568,7 @@ window.kirimWA = function(id) {
 // Kirim Pesan Teguran ke User
 window.kirimPesanKeUser = function(id) {
     let data = dataJadwal.find(d => d.id === id);
+    if (!data) { munculNotif("Data tidak ditemukan!", "#dc3545"); return; }
     let currentTeguran = data.teguranCount || 0;
     
     let pesan = prompt("Kirim pesan web ke user (Teguran ke-" + (currentTeguran+1) + "):", data.pesanAdmin || "");
@@ -644,6 +582,7 @@ window.kirimPesanKeUser = function(id) {
 // Lihat Bukti Foto
 window.lihatBuktiAdmin = function(id) {
     let data = dataJadwal.find(d => d.id === id);
+    if (!data) { munculNotif("Data tidak ditemukan!", "#dc3545"); return; }
     let wadahFoto = document.getElementById("containerBuktiFoto");
     wadahFoto.innerHTML = "";
     if (data.fotos && data.fotos.length > 0) {
@@ -683,6 +622,7 @@ window.tutupBukti = function() {
 window.terimaBukti = async function() {
     let id = document.getElementById("actionKonfirmasi").dataset.id;
     let data = dataJadwal.find(d => d.id === id);
+    if (!data) { munculNotif("Data tidak ditemukan!", "#dc3545"); return; }
     let currentPelanggaran = data.skorPelanggaran || 0;
     let currentSelesai = data.skorSelesai || 0;
     
@@ -738,6 +678,7 @@ window.tolakBukti = function() {
 window.konfirmasiTolakBukti = function() {
     let id = document.getElementById("actionKonfirmasi").dataset.id;
     let data = dataJadwal.find(d => d.id === id);
+    if (!data) { munculNotif("Data tidak ditemukan!", "#dc3545"); return; }
     let currentTeguran = data.teguranCount || 0;
     
     let alasan = document.getElementById("inputAlasanTolak").value.trim();
