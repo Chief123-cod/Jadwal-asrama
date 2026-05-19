@@ -101,11 +101,20 @@ async function jalankanLogikaOtomatis() {
             });
         }
 
-        // 5. Cek Deadline Jam 19:00
+        // 5. Cek Deadline Jam Selesai
         const hariIndo = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
         let namaHariIni = hariIndo[now.getDay()];
 
-        if (jam >= 19) {
+        let snapshotSettings = await get(ref(db, 'settings'));
+        let sets = snapshotSettings.val() || {};
+        let jamSelesaiArr = (sets.jamSelesai || "19:00").split(":");
+        let batasJam = parseInt(jamSelesaiArr[0]);
+        let batasMenit = parseInt(jamSelesaiArr[1]);
+        
+        let nowMenitTotal = now.getHours() * 60 + now.getMinutes();
+        let batasMenitTotal = batasJam * 60 + batasMenit;
+
+        if (nowMenitTotal > batasMenitTotal) {
             jadwalList.forEach(item => {
                 if (item.hari === namaHariIni && !item.selesai && !item.alpa) {
                     if (item.menungguVerifikasi) {
@@ -128,7 +137,7 @@ async function jalankanLogikaOtomatis() {
                         updateData['jadwal_piket/' + item.id + '/alpa'] = true;
                         updateData['jadwal_piket/' + item.id + '/skorPelanggaran'] = skorPelanggaranBaru;
                         butuhUpdate = true;
-                        console.log("Sistem: Tenggat waktu jam 19:00 lewat. Menandai Alpa + Pelanggaran untuk " + item.nama);
+                        console.log("Sistem: Tenggat waktu jam selesai lewat. Menandai Alpa + Pelanggaran untuk " + item.nama);
                     }
                 }
             });
@@ -456,6 +465,38 @@ onValue(ref(db, 'settings/pengumuman'), (snapshot) => {
     }
 });
 
+// Pengaturan Sistem
+window.bukaPengaturan = function() {
+    get(ref(db, 'settings')).then((snapshot) => {
+        let set = snapshot.val() || {};
+        document.getElementById("jamMulai").value = set.jamMulai || "05:00";
+        document.getElementById("jamSelesai").value = set.jamSelesai || "19:00";
+        document.getElementById("modalPengaturan").style.display = "flex";
+    });
+}
+
+window.tutupPengaturan = function() {
+    document.getElementById("modalPengaturan").style.display = "none";
+}
+
+window.simpanPengaturan = function() {
+    let jMulai = document.getElementById("jamMulai").value;
+    let jSelesai = document.getElementById("jamSelesai").value;
+    
+    if (!jMulai || !jSelesai) {
+        munculNotif("Jam tidak boleh kosong!", "#ff9800");
+        return;
+    }
+    
+    update(ref(db, 'settings'), {
+        jamMulai: jMulai,
+        jamSelesai: jSelesai
+    }).then(() => {
+        munculNotif("Pengaturan sistem berhasil disimpan!", "#28a745");
+        tutupPengaturan();
+    });
+}
+
 // Logout
 window.logoutSistem = function() {
     sessionStorage.removeItem("sesi_asrama");
@@ -531,6 +572,16 @@ window.simpanEdit = function() {
         munculNotif("Semua data harus diisi!", "#ff9800");
         return;
     }
+
+    const hariIndo = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+    let hariIniIndo = hariIndo[new Date().getDay()];
+    let oldData = dataJadwal.find(d => d.id === id);
+    
+    if (oldData && oldData.hari === hariIniIndo && hari !== hariIniIndo) {
+        munculNotif(`Jadwal ${oldData.nama} tidak bisa diubah harinya karena sedang bertugas pada hari ini (${hariIniIndo})!`, "#dc3545");
+        return;
+    }
+
     let nowaFormat = nowaRaw.startsWith("0") ? "62" + nowaRaw.substring(1) : nowaRaw;
 
     // Cek duplikat nomor HP (kecuali data sendiri)

@@ -9,6 +9,29 @@ let currentUser = null;
 let dataJadwal = [];
 let idSedangUpload = null;
 let idBacaPesan = null;
+let systemSettings = { jamMulai: "05:00", jamSelesai: "19:00" };
+
+onValue(ref(db, 'settings'), (snapshot) => {
+    let s = snapshot.val();
+    if(s) {
+        systemSettings.jamMulai = s.jamMulai || "05:00";
+        systemSettings.jamSelesai = s.jamSelesai || "19:00";
+        if(currentUser) renderTabel();
+    }
+});
+
+function isWaktuPiketAktif() {
+    let now = new Date();
+    let currentMenitTotal = now.getHours() * 60 + now.getMinutes();
+    
+    let arrMulai = systemSettings.jamMulai.split(":");
+    let menitMulai = parseInt(arrMulai[0]) * 60 + parseInt(arrMulai[1]);
+    
+    let arrSelesai = systemSettings.jamSelesai.split(":");
+    let menitSelesai = parseInt(arrSelesai[0]) * 60 + parseInt(arrSelesai[1]);
+    
+    return currentMenitTotal >= menitMulai && currentMenitTotal <= menitSelesai;
+}
 
 // Urutan hari untuk sorting (Senin = 0, Minggu = 6)
 const URUTAN_HARI = { "Senin": 0, "Selasa": 1, "Rabu": 2, "Kamis": 3, "Jumat": 4, "Sabtu": 5, "Minggu": 6 };
@@ -232,19 +255,27 @@ function renderTabel() {
                     
                     extraBtn = `<button id="btnPesanAdmin_${item.id}" onclick="bukaPesanUser('${item.id}', '${item.pesanAdmin}')" style="display:${btnPesanDisplay}; background:var(--red); color:white; border:none; padding:4px 10px; border-radius:6px; font-size:11px; font-weight:600; cursor:pointer; align-items:center; gap:4px;">📩 Pesan Admin!</button>`;
                     if (item.hari === hariIniStr) {
-                        extraBtn += `
-                            <button id="btnKirim_${item.id}" onclick="bukaKamera('${item.id}')" style="display:${actionDisplay}; background:var(--green); color:white; border:none; padding:4px 10px; border-radius:6px; font-size:11px; font-weight:600; cursor:pointer; align-items:center; gap:4px;">📷 Kirim Bukti</button>
-                            <button id="btnIzin_${item.id}" onclick="izinTugas('${item.id}')" style="display:${actionDisplayIzin}; background:rgba(6,182,212,0.1); color:var(--cyan); border:1px solid rgba(6,182,212,0.2); padding:4px 10px; border-radius:6px; font-size:11px; font-weight:600; cursor:pointer;">📝 Izin</button>
-                        `;
+                        if (isWaktuPiketAktif()) {
+                            extraBtn += `
+                                <button id="btnKirim_${item.id}" onclick="bukaKamera('${item.id}')" style="display:${actionDisplay}; background:var(--green); color:white; border:none; padding:4px 10px; border-radius:6px; font-size:11px; font-weight:600; cursor:pointer; align-items:center; gap:4px;">📷 Kirim Bukti</button>
+                                <button id="btnIzin_${item.id}" onclick="izinTugas('${item.id}')" style="display:${actionDisplayIzin}; background:rgba(6,182,212,0.1); color:var(--cyan); border:1px solid rgba(6,182,212,0.2); padding:4px 10px; border-radius:6px; font-size:11px; font-weight:600; cursor:pointer;">📝 Izin</button>
+                            `;
+                        } else {
+                            extraBtn += `<span style="display:${actionDisplay}; font-size:11px; color:var(--orange); font-weight:600; text-align:right;">Di luar<br>jam piket</span>`;
+                        }
                     }
                 } else if (item.alpa) {
                     extraBtn = `<span style="font-size:11px; color:#dc2626; font-weight:600;">Waktu Habis</span>`;
                 } else if (!item.selesai && !item.menungguVerifikasi) {
                     if (item.hari === hariIniStr) {
-                        extraBtn = `
-                            <button onclick="bukaKamera('${item.id}')" style="background:var(--green); color:white; border:none; padding:4px 10px; border-radius:6px; font-size:11px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:4px;">📷 Kirim Bukti</button>
-                            <button onclick="izinTugas('${item.id}')" style="background:rgba(6,182,212,0.1); color:var(--cyan); border:1px solid rgba(6,182,212,0.2); padding:4px 10px; border-radius:6px; font-size:11px; font-weight:600; cursor:pointer;">📝 Izin</button>
-                        `;
+                        if (isWaktuPiketAktif()) {
+                            extraBtn = `
+                                <button onclick="bukaKamera('${item.id}')" style="background:var(--green); color:white; border:none; padding:4px 10px; border-radius:6px; font-size:11px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:4px;">📷 Kirim Bukti</button>
+                                <button onclick="izinTugas('${item.id}')" style="background:rgba(6,182,212,0.1); color:var(--cyan); border:1px solid rgba(6,182,212,0.2); padding:4px 10px; border-radius:6px; font-size:11px; font-weight:600; cursor:pointer;">📝 Izin</button>
+                            `;
+                        } else {
+                            extraBtn = `<span style="font-size:11px; color:var(--orange); font-weight:600; text-align:right;">Di luar<br>jam piket</span>`;
+                        }
                     } else {
                         extraBtn = `<span style="font-size:11px; color:var(--text2); font-weight:600; text-align:right;">Hanya bisa kirim<br>di hari H</span>`;
                     }
@@ -325,6 +356,12 @@ window.bukaPesanUser = function(id, pesanText) {
     if (btnIzin) btnIzin.style.display = "inline-block";
     if (btnPesan) btnPesan.style.display = "none";
     
+    // Check waktu piket
+    if (!isWaktuPiketAktif() && btnKirim) {
+        btnKirim.style.display = "none";
+        if (btnIzin) btnIzin.style.display = "none";
+    }
+    
     // Simpan ke array openedMessages agar persisten ketika di-refresh
     if (!openedMessages.includes(id)) {
         openedMessages.push(id);
@@ -336,14 +373,20 @@ window.bukaPesanUser = function(id, pesanText) {
 }
 
 window.tutupPesanAdmin = function() {
-    // Hanya tutup modal, JANGAN set pesanDibaca: true
-    // Pesan akan tetap muncul sampai user kirim foto atau izin
     document.getElementById("modalPesanAdmin").style.display = "none";
-    munculNotif("Segera lakukan piket ulang dan kirim bukti foto!", "#ff9800");
+    if (isWaktuPiketAktif()) {
+        munculNotif("Segera lakukan piket ulang dan kirim bukti foto!", "#ff9800");
+    } else {
+        munculNotif("Waktu piket sudah ditutup.", "#ff9800");
+    }
 }
 
 // Upload Foto Bukti
 window.bukaKamera = function(id) {
+    if (!isWaktuPiketAktif()) {
+        munculNotif("Saat ini di luar jam piket! Form ditutup.", "#dc3545");
+        return;
+    }
     idSedangUpload = id;
     document.getElementById("inputFoto").click();
 }
