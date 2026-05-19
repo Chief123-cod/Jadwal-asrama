@@ -743,7 +743,6 @@ window.konfirmasiTolakBukti = function() {
         selesai: false, 
         pesanAdmin: "BUKTI DITOLAK: " + alasan,
         pesanDibaca: false,
-        teguranCount: currentTeguran + 1,
         foto: null, // Hapus foto agar user kirim ulang
         fotos: null
     }).then(() => {

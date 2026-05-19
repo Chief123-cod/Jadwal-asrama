@@ -4,6 +4,7 @@
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
 import { getDatabase } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-database.js";
+import { getStorage } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-storage.js";
 
 // Konfigurasi Firebase Project
 const firebaseConfig = {
@@ -20,5 +21,6 @@ const firebaseConfig = {
 // Inisialisasi Firebase
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
+const storage = getStorage(app);
 
-export { db };
+export { db, storage };

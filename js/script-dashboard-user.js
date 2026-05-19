@@ -252,14 +252,12 @@ function renderTabel() {
                     let isOpened = openedMessages.includes(item.id);
                     let btnPesanDisplay = isOpened ? "none" : "flex";
                     let actionDisplay = isOpened ? "flex" : "none";
-                    let actionDisplayIzin = isOpened ? "inline-block" : "none";
                     
                     extraBtn = `<button id="btnPesanAdmin_${item.id}" onclick="bukaPesanUser('${item.id}', '${item.pesanAdmin}')" style="display:${btnPesanDisplay}; background:var(--red); color:white; border:none; padding:4px 10px; border-radius:6px; font-size:11px; font-weight:600; cursor:pointer; align-items:center; gap:4px;">📩 Pesan Admin!</button>`;
                     if (item.hari === hariIniStr) {
                         if (isWaktuPiketAktif()) {
                             extraBtn += `
                                 <button id="btnKirim_${item.id}" onclick="bukaKamera('${item.id}')" style="display:${actionDisplay}; background:var(--green); color:white; border:none; padding:4px 10px; border-radius:6px; font-size:11px; font-weight:600; cursor:pointer; align-items:center; gap:4px;">📷 Kirim Bukti</button>
-                                <button id="btnIzin_${item.id}" onclick="izinTugas('${item.id}')" style="display:${actionDisplayIzin}; background:rgba(6,182,212,0.1); color:var(--cyan); border:1px solid rgba(6,182,212,0.2); padding:4px 10px; border-radius:6px; font-size:11px; font-weight:600; cursor:pointer;">📝 Izin</button>
                             `;
                         } else {
                             extraBtn += `<span style="display:${actionDisplay}; font-size:11px; color:var(--orange); font-weight:600; text-align:right;">Di luar<br>jam piket</span>`;
@@ -272,7 +270,6 @@ function renderTabel() {
                         if (isWaktuPiketAktif()) {
                             extraBtn = `
                                 <button onclick="bukaKamera('${item.id}')" style="background:var(--green); color:white; border:none; padding:4px 10px; border-radius:6px; font-size:11px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:4px;">📷 Kirim Bukti</button>
-                                <button onclick="izinTugas('${item.id}')" style="background:rgba(6,182,212,0.1); color:var(--cyan); border:1px solid rgba(6,182,212,0.2); padding:4px 10px; border-radius:6px; font-size:11px; font-weight:600; cursor:pointer;">📝 Izin</button>
                             `;
                         } else {
                             extraBtn = `<span style="font-size:11px; color:var(--orange); font-weight:600; text-align:right;">Di luar<br>jam piket</span>`;
@@ -350,17 +347,14 @@ window.bukaPesanUser = function(id, pesanText) {
     
     // Munculkan tombol di card
     let btnKirim = document.getElementById(`btnKirim_${id}`);
-    let btnIzin = document.getElementById(`btnIzin_${id}`);
     let btnPesan = document.getElementById(`btnPesanAdmin_${id}`);
     
     if (btnKirim) btnKirim.style.display = "flex";
-    if (btnIzin) btnIzin.style.display = "inline-block";
     if (btnPesan) btnPesan.style.display = "none";
     
     // Check waktu piket
     if (!isWaktuPiketAktif() && btnKirim) {
         btnKirim.style.display = "none";
-        if (btnIzin) btnIzin.style.display = "none";
     }
     
     // Simpan ke array openedMessages agar persisten ketika di-refresh
@@ -455,21 +449,6 @@ onValue(ref(db, 'settings/pengumuman'), (snapshot) => {
         }
     }
 });
-
-// Izin Tugas
-window.izinTugas = function(id) {
-    let alasan = prompt("Masukkan alasan Izin/Sakit:");
-    if (alasan) {
-        update(ref(db, 'jadwal_piket/' + id), {
-            menungguVerifikasi: true, 
-            foto: "", 
-            fotos: [], 
-            pesanUser: "IZIN: " + alasan,
-            pesanDibaca: true,
-            pesanAdmin: ""
-        }).then(() => munculNotif("Izin terkirim. Menunggu persetujuan admin.", "#17a2b8"));
-    }
-}
 
 let filesToUpload = [];
 

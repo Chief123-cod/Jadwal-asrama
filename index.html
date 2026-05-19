@@ -20,7 +20,7 @@
 
     <div id="toastBox"></div>
 
-    <div class="bg-particles">
+    <div class="bg-particles" id="bgOverlay" style="transition: background 0.5s ease; background-size: cover; background-position: center;">
         <div class="particle"></div>
         <div class="particle"></div>
         <div class="particle"></div>
@@ -46,7 +46,7 @@
                     </svg>
                 </div>
                 <h1>GH-Clean Schedule</h1>
-                <p class="home-subtitle">Jadwal Piket Asrama Digital</p>
+                <p class="home-subtitle" style="color: var(--text);">Jadwal Piket Asrama Digital</p>
             </div>
 
             <div class="role-cards">
@@ -96,11 +96,45 @@
                 </div>
             </div>
 
-            <p class="home-footer-text">🏠 Asrama Digital &mdash; Disiplin, Bersih, Nyaman</p>
+            <p class="home-footer-text" style="color: var(--text);">🏠 Asrama Digital &mdash; Disiplin, Bersih, Nyaman</p>
         </div>
     </div>
 
     <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-database.js";
+
+        // Konfigurasi Firebase Project
+        const firebaseConfig = {
+            apiKey: "AIzaSyAhGYIASP-WiFdWW_JI8ZDmxAzMynR8orc",
+            authDomain: "jadwal-asrama.firebaseapp.com",
+            databaseURL: "https://jadwal-asrama-default-rtdb.firebaseio.com",
+            projectId: "jadwal-asrama",
+            storageBucket: "jadwal-asrama.firebasestorage.app",
+            messagingSenderId: "831067402841",
+            appId: "1:831067402841:web:c5e7198d96b48e0a5ab748",
+            measurementId: "G-MNEV1L1SZF"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // Load Custom Background
+        const bgOverlay = document.getElementById('bgOverlay');
+        const pengaturanRef = ref(db, 'settings/bgLoginUrl');
+        
+        onValue(pengaturanRef, (snapshot) => {
+            const bgUrl = snapshot.val();
+            if (bgUrl) {
+                // Gunakan foto dengan gradient overlay agar teks tetap terbaca
+                bgOverlay.style.backgroundImage = `linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('${bgUrl}')`;
+            } else {
+                // Kembali ke default
+                bgOverlay.style.backgroundImage = 'none';
+            }
+        });
+
+        // Redirect logic
         let sesi = sessionStorage.getItem("sesi_asrama");
         if (sesi) {
             let data = JSON.parse(sesi);
