@@ -4,6 +4,7 @@
 
 import { db } from "./database.js";
 import { ref, onValue, update, get } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-database.js";
+import { munculNotif, initInactivityTimeout, logoutSistem } from "./utils.js";
 
 let currentUser = null;
 let dataJadwal = [];
@@ -51,47 +52,11 @@ if (!sesi) {
     }
 }
 
-// Inactivity Timeout (15 Menit)
-const TIMEOUT_MS = 15 * 60 * 1000;
-function resetTimer() {
-    if(sessionStorage.getItem("sesi_asrama")) {
-        sessionStorage.setItem("last_activity", Date.now());
-    }
-}
-window.addEventListener("mousemove", resetTimer);
-window.addEventListener("keydown", resetTimer);
-window.addEventListener("click", resetTimer);
-window.addEventListener("scroll", resetTimer);
-window.addEventListener("touchstart", resetTimer);
-
-setInterval(() => {
-    let lastActivity = sessionStorage.getItem("last_activity");
-    if (lastActivity && (Date.now() - parseInt(lastActivity) > TIMEOUT_MS)) {
-        sessionStorage.removeItem("sesi_asrama");
-        sessionStorage.removeItem("last_activity");
-        alert("Sesi Anda telah habis karena tidak ada aktivitas. Silakan login kembali.");
-        window.location.href = "../index.html";
-    }
-}, 60000);
+// Inactivity Timeout (dari utils.js)
+initInactivityTimeout();
 
 // Persisten pesan dibuka (selama tab tidak diclose)
 let openedMessages = JSON.parse(sessionStorage.getItem("opened_messages") || "[]");
-
-// Notifikasi Toast
-function munculNotif(pesan, warna = "#333") {
-    let toastBox = document.getElementById("toastBox");
-    let toast = document.createElement("div");
-    toast.classList.add("toast");
-    let borderColor = 'var(--accent)';
-    if (warna === "#28a745" || warna === "#25D366") borderColor = 'var(--green)';
-    else if (warna === "#dc3545" || warna === "#ff4d4d") borderColor = 'var(--red)';
-    else if (warna === "#ff9800") borderColor = 'var(--orange)';
-    else if (warna === "#17a2b8") borderColor = 'var(--cyan)';
-    toast.style.borderLeftColor = borderColor;
-    toast.innerText = pesan;
-    toastBox.appendChild(toast);
-    setTimeout(() => { toast.remove(); }, 3000);
-}
 
 // Update Stats Cards
 function updateStats() {
@@ -253,7 +218,7 @@ function renderTabel() {
                     let btnPesanDisplay = isOpened ? "none" : "flex";
                     let actionDisplay = isOpened ? "flex" : "none";
                     
-                    extraBtn = `<button id="btnPesanAdmin_${item.id}" onclick="bukaPesanUser('${item.id}', '${item.pesanAdmin}')" style="display:${btnPesanDisplay}; background:var(--red); color:white; border:none; padding:4px 10px; border-radius:6px; font-size:11px; font-weight:600; cursor:pointer; align-items:center; gap:4px;">📩 Pesan Admin!</button>`;
+                    extraBtn = `<button id="btnPesanAdmin_${item.id}" onclick="bukaPesanUser('${item.id}')" style="display:${btnPesanDisplay}; background:var(--red); color:white; border:none; padding:4px 10px; border-radius:6px; font-size:11px; font-weight:600; cursor:pointer; align-items:center; gap:4px;">📩 Pesan Admin!</button>`;
                     if (item.hari === hariIniStr) {
                         if (isWaktuPiketAktif()) {
                             extraBtn += `
@@ -319,14 +284,8 @@ function renderTabel() {
     wadahTabel.innerHTML = gridHTML;
 }
 
-// Logout
-window.logoutSistem = function() {
-    sessionStorage.removeItem("sesi_asrama");
-    sessionStorage.removeItem("last_activity");
-    sessionStorage.removeItem("opened_messages");
-    munculNotif("Berhasil keluar akun.", "#6c757d");
-    setTimeout(() => { window.location.href = "../index.html"; }, 500);
-}
+// Logout (dari utils.js, dengan extra keys)
+window.logoutSistem = () => logoutSistem(['opened_messages']);
 
 // Realtime Listener dari Firebase
 onValue(ref(db, 'jadwal_piket'), (snapshot) => {
@@ -340,8 +299,11 @@ onValue(ref(db, 'jadwal_piket'), (snapshot) => {
 });
 
 // Buka / Tutup Modal Pesan Admin
-window.bukaPesanUser = function(id, pesanText) {
+window.bukaPesanUser = function(id) {
+    let data = dataJadwal.find(d => d.id === id);
+    if (!data) return;
     idBacaPesan = id;
+    let pesanText = data.pesanAdmin || '';
     let elTeks = document.getElementById("teksPesanAdmin");
     if(elTeks) elTeks.innerText = `"${pesanText}"`;
     

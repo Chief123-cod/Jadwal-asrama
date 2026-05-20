@@ -66,6 +66,13 @@
         .slider.round:before {
             border-radius: 50%;
         }
+
+        /* Tombol Simpan: HP = tengah, Laptop = kanan */
+        @media (max-width: 768px) {
+            .btn-save-wrapper {
+                justify-content: center !important;
+            }
+        }
     </style>
 </head>
 <body>
@@ -254,7 +261,9 @@
                         <p style="font-size: 12px; color: var(--text2); margin-top: 12px; margin-bottom: 0;">*Format didukung: Semua jenis gambar (JPG, PNG, WebP, JFIF, dll). Maksimal 5MB.</p>
                     </div>
 
-                    <button class="btn-save" style="width: 100%; max-width: 300px; margin: 0; padding: 14px; font-size: 16px; cursor: pointer;" onclick="simpanPengaturan()">Simpan Perubahan</button>
+                    <div class="btn-save-wrapper" style="display: flex; justify-content: flex-end;">
+                        <button class="btn-save" style="width: 100%; max-width: 300px; margin: 0; padding: 14px; font-size: 16px; cursor: pointer;" onclick="simpanPengaturan()">Simpan Perubahan</button>
+                    </div>
                 </div>
             </main>
         </div>

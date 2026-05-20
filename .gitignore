@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+package.json
+package-lock.json
+
+# Firebase credentials (JANGAN PERNAH di-push!)
+service-account.json
+*-credentials.json
+*.pem
+
+# CORS config (khusus Firebase Storage - tidak dipakai)
+cors.json
+set-cors.js
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+npm-debug.log*

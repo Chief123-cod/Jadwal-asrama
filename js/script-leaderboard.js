@@ -4,6 +4,7 @@
 
 import { db } from "./database.js";
 import { ref, onValue } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-database.js";
+import { munculNotif, initInactivityTimeout, logoutSistem } from "./utils.js";
 
 // Cek sesi login
 let currentUser = null;
@@ -17,54 +18,9 @@ if (!sesi) {
     }
 }
 
-// Inactivity Timeout (15 Menit)
-const TIMEOUT_MS = 15 * 60 * 1000;
-function resetTimer() {
-    if(sessionStorage.getItem("sesi_asrama")) {
-        sessionStorage.setItem("last_activity", Date.now());
-    }
-}
-window.addEventListener("mousemove", resetTimer);
-window.addEventListener("keydown", resetTimer);
-window.addEventListener("click", resetTimer);
-window.addEventListener("scroll", resetTimer);
-window.addEventListener("touchstart", resetTimer);
-
-setInterval(() => {
-    let lastActivity = sessionStorage.getItem("last_activity");
-    if (lastActivity && (Date.now() - parseInt(lastActivity) > TIMEOUT_MS)) {
-        sessionStorage.removeItem("sesi_asrama");
-        sessionStorage.removeItem("last_activity");
-        alert("Sesi Anda telah habis karena tidak ada aktivitas. Silakan login kembali.");
-        window.location.href = "../index.html";
-    }
-}, 60000);
-
-// Notifikasi Toast
-function munculNotif(pesan, warna = "#333") {
-    let toastBox = document.getElementById("toastBox");
-    let toast = document.createElement("div");
-    toast.classList.add("toast");
-    let borderColor = 'var(--accent)';
-    if (warna === "#28a745" || warna === "#25D366") borderColor = 'var(--green)';
-    else if (warna === "#dc3545" || warna === "#ff4d4d") borderColor = 'var(--red)';
-    else if (warna === "#ff9800") borderColor = 'var(--orange)';
-    else if (warna === "#17a2b8") borderColor = 'var(--cyan)';
-    toast.style.borderLeftColor = borderColor;
-    toast.innerText = pesan;
-    toastBox.appendChild(toast);
-    setTimeout(() => { toast.remove(); }, 3000);
-}
-
-
-
-// Logout
-window.logoutSistem = function() {
-    sessionStorage.removeItem("sesi_asrama");
-    sessionStorage.removeItem("last_activity");
-    munculNotif("Berhasil keluar akun.", "#6c757d");
-    setTimeout(() => { window.location.href = "../index.html"; }, 500);
-}
+// Inactivity Timeout & Logout (dari utils.js)
+initInactivityTimeout();
+window.logoutSistem = () => logoutSistem();
 
 // ===== DATA PROCESSING =====
 let dataJadwal = [];

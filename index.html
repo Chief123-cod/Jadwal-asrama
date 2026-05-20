@@ -14,6 +14,31 @@
     <link rel="stylesheet" href="css/global.css">
     <link rel="stylesheet" href="css/home.css">
     <script>document.documentElement.classList.remove('light-mode');</script>
+    <style>
+        /* Sembunyikan halaman dulu sampai background siap */
+        body { opacity: 0; transition: opacity 0.4s ease; }
+        body.ready { opacity: 1; }
+    </style>
+    <script>
+        // Langsung terapkan background dari cache (sebelum Firebase load)
+        (function() {
+            let cachedBg = localStorage.getItem('cached_bg_login');
+            if (cachedBg) {
+                document.addEventListener('DOMContentLoaded', function() {
+                    let el = document.getElementById('bgOverlay');
+                    if (el) {
+                        el.style.backgroundImage = "linear-gradient(rgba(0,0,0,0.7),rgba(0,0,0,0.7)), url('" + cachedBg + "')";
+                    }
+                    document.body.classList.add('ready');
+                });
+            } else {
+                // Tidak ada cache, langsung tampilkan default
+                document.addEventListener('DOMContentLoaded', function() {
+                    document.body.classList.add('ready');
+                });
+            }
+        })();
+    </script>
 </head>
 
 <body>
@@ -119,19 +144,23 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // Load Custom Background
+        // Load Custom Background (dengan caching di localStorage)
         const bgOverlay = document.getElementById('bgOverlay');
         const pengaturanRef = ref(db, 'settings/bgLoginUrl');
         
         onValue(pengaturanRef, (snapshot) => {
             const bgUrl = snapshot.val();
             if (bgUrl) {
-                // Gunakan foto dengan gradient overlay agar teks tetap terbaca
+                // Simpan ke cache agar next visit langsung muncul
+                localStorage.setItem('cached_bg_login', bgUrl);
                 bgOverlay.style.backgroundImage = `linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('${bgUrl}')`;
             } else {
-                // Kembali ke default
+                // Hapus cache jika background dihapus
+                localStorage.removeItem('cached_bg_login');
                 bgOverlay.style.backgroundImage = 'none';
             }
+            // Pastikan halaman terlihat setelah background dimuat
+            document.body.classList.add('ready');
         });
 
         // Redirect logic

@@ -4,6 +4,7 @@
 
 import { db } from "./database.js";
 import { ref, onValue } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-database.js";
+import { munculNotif } from "./utils.js";
 
 let dataJadwal = [];
 let dataSudahDimuat = false;
@@ -19,21 +20,7 @@ if (sesi) {
     }
 }
 
-// Notifikasi Toast
-function munculNotif(pesan, warna = "#333") {
-    let toastBox = document.getElementById("toastBox");
-    let toast = document.createElement("div");
-    toast.classList.add("toast");
-    let borderColor = 'var(--accent)';
-    if (warna === "#28a745" || warna === "#25D366") borderColor = 'var(--green)';
-    else if (warna === "#dc3545" || warna === "#ff4d4d") borderColor = 'var(--red)';
-    else if (warna === "#ff9800") borderColor = 'var(--orange)';
-    else if (warna === "#17a2b8") borderColor = 'var(--cyan)';
-    toast.style.borderLeftColor = borderColor;
-    toast.innerText = pesan;
-    toastBox.appendChild(toast);
-    setTimeout(() => { toast.remove(); }, 3000);
-}
+
 
 // Realtime Listener dari Firebase
 onValue(ref(db, 'jadwal_piket'), (snapshot) => {
