@@ -276,11 +276,12 @@
 
 .kamar-row {
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 12px;
-    padding: 12px 20px;
+    padding: 10px 20px;
     border-bottom: 1px solid var(--border);
 }
+
 .kamar-row:last-child {
     border-bottom: none;
 }
@@ -870,8 +871,11 @@ tbody td {
         font-size: 11px !important;
     }
     .kamar-row {
-        padding: 10px 14px !important;
-        gap: 8px !important;
+        padding: 12px 14px !important;
+        gap: 10px !important;
+    }
+    .kamar-row:last-child {
+        border-bottom: none !important;
     }
     .kamar-row-name {
         font-size: 13px !important;

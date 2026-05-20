@@ -293,14 +293,14 @@ function renderTabel() {
                 <button onclick="kirimWA('${item.id}')" style="background:#22c55e; color:white; border:none; padding:4px 10px; border-radius:6px; font-size:11px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:4px;">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg> WA
                 </button>
-                <button onclick="kirimPesanKeUser('${item.id}')" style="background:#f97316; color:white; border:none; padding:4px 10px; border-radius:6px; font-size:11px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:4px;">
+                <button onclick="kirimPesanKeUser('${item.id}')" style="background:#dc2626; color:white; border:none; padding:4px 10px; border-radius:6px; font-size:11px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:4px;">
                     Teguran (${item.teguranCount || 0})
                 </button>
                 `;
             }
 
             cardHTML += `
-            <div class="kamar-row" style="flex-direction:column; align-items:flex-start; gap:12px;">
+            <div class="kamar-row" style="flex-direction:column; align-items:flex-start; gap:6px;">
                 <div style="display:flex; width:100%; gap:10px; align-items:center;">
                     <div class="kamar-row-info" style="flex:1;">
                         <div style="display:flex; align-items:center; gap:6px;">
@@ -309,11 +309,11 @@ function renderTabel() {
                             ${editBtn}
                             ${deleteBtn}
                         </div>
-                        <div style="margin-top:4px;">${statusBadge}</div>
+                        <div style="margin-top:2px;">${statusBadge}</div>
                     </div>
                 </div>
                 
-                <div style="display:flex; width:100%; justify-content:space-between; align-items:center; background:var(--surface2); padding:8px 12px; border-radius:8px; border:1px solid var(--border);">
+                <div style="display:flex; width:100%; justify-content:space-between; align-items:center; background:var(--surface2); padding:6px 12px; border-radius:8px; border:1px solid var(--border);">
                     <div class="kamar-row-task" style="flex:1; margin-right:12px; font-size:12px; color:var(--text);">${item.tugas}</div>
                     <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
                         ${extraBtn}
