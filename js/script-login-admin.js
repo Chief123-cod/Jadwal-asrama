@@ -82,7 +82,7 @@ window.prosesLoginAdmin = async function () {
             let dataSesi = { role: "admin", theme: adminTheme };
             sessionStorage.setItem("sesi_asrama", JSON.stringify(dataSesi));
             sessionStorage.setItem("last_activity", Date.now());
-            sessionStorage.setItem("showGreetingOnce", "true");
+
 
             munculNotif("Berhasil Masuk! Mengalihkan...", "#28a745");
             document.getElementById("inputPassAdmin").value = "";

@@ -4,12 +4,11 @@
 
 import { db } from "./database.js";
 import { ref, onValue, update, get } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-database.js";
-import { munculNotif, initInactivityTimeout, logoutSistem } from "./utils.js";
+import { munculNotif, initInactivityTimeout, logoutSistem, escapeHtml, URUTAN_HARI, sortByHari, kompresGambar, getHash } from "./utils.js";
 
 let currentUser = null;
 let dataJadwal = [];
 let idSedangUpload = null;
-let idBacaPesan = null;
 let systemSettings = { jamMulai: "05:00", jamSelesai: "19:00", wajibKamera: false };
 
 onValue(ref(db, 'settings'), (snapshot) => {
@@ -35,11 +34,7 @@ function isWaktuPiketAktif() {
     return currentMenitTotal >= menitMulai && currentMenitTotal <= menitSelesai;
 }
 
-// Urutan hari untuk sorting (Senin = 0, Minggu = 6)
-const URUTAN_HARI = { "Senin": 0, "Selasa": 1, "Rabu": 2, "Kamis": 3, "Jumat": 4, "Sabtu": 5, "Minggu": 6 };
-function sortByHari(arr) {
-    return arr.sort((a, b) => (URUTAN_HARI[a.hari] ?? 99) - (URUTAN_HARI[b.hari] ?? 99));
-}
+
 
 // Cek sesi login
 let sesi = sessionStorage.getItem("sesi_asrama");
@@ -185,7 +180,7 @@ function renderTabel() {
                     <div class="kamar-card-icon">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4v16"></path><path d="M2 8h18a2 2 0 0 1 2 2v10"></path><path d="M2 17h20"></path><path d="M6 8v9"></path></svg>
                     </div>
-                    ${namaKamar}
+                    ${escapeHtml(namaKamar)}
                 </div>
                 ${cardBadge}
             </div>
@@ -258,7 +253,7 @@ function renderTabel() {
                 <div style="display:flex; width:100%; gap:10px; align-items:center;">
                     <div class="kamar-row-info" style="flex:1;">
                         <div style="display:flex; align-items:center;">
-                            <div class="kamar-row-name" style="font-weight:600; font-size:14px;">${item.nama}</div>
+                            <div class="kamar-row-name" style="font-weight:600; font-size:14px;">${escapeHtml(item.nama)}</div>
                             ${myTaskMarker}
                         </div>
                         <div style="margin-top:4px; font-size:12px; color:var(--text2); font-weight:600;">Hari ${item.hari}</div>
@@ -267,7 +262,7 @@ function renderTabel() {
                 </div>
                 
                 <div style="display:flex; width:100%; justify-content:space-between; align-items:center; background:var(--surface2); padding:8px 12px; border-radius:8px; border:1px solid var(--border);">
-                    <div class="kamar-row-task" style="flex:1; margin-right:12px; font-size:12px; color:var(--text);">${item.tugas}</div>
+                    <div class="kamar-row-task" style="flex:1; margin-right:12px; font-size:12px; color:var(--text);">${escapeHtml(item.tugas)}</div>
                     <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
                         ${extraBtn}
                     </div>
@@ -302,7 +297,6 @@ onValue(ref(db, 'jadwal_piket'), (snapshot) => {
 window.bukaPesanUser = function(id) {
     let data = dataJadwal.find(d => d.id === id);
     if (!data) return;
-    idBacaPesan = id;
     let pesanText = data.pesanAdmin || '';
     let elTeks = document.getElementById("teksPesanAdmin");
     if(elTeks) elTeks.innerText = `"${pesanText}"`;
@@ -354,26 +348,7 @@ window.bukaKamera = function(id) {
     inputFoto.click();
 }
 
-function kompresGambar(file) {
-    return new Promise((resolve) => {
-        let reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = function(event) {
-            let img = new Image();
-            img.src = event.target.result;
-            img.onload = function() {
-                let canvas = document.createElement("canvas");
-                let MAX_WIDTH = 800;
-                let scaleSize = img.width > MAX_WIDTH ? MAX_WIDTH / img.width : 1;
-                canvas.width = img.width > MAX_WIDTH ? MAX_WIDTH : img.width;
-                canvas.height = img.height * scaleSize;
-                let ctx = canvas.getContext("2d");
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                resolve(canvas.toDataURL("image/jpeg", 0.6));
-            }
-        }
-    });
-}
+
 
 // Theme Toggle
 window.toggleTheme = function() {
@@ -458,16 +433,6 @@ document.getElementById("btnConfirmUpload").addEventListener("click", async func
     btn.innerText = "Memverifikasi & Mengompres...";
     btn.disabled = true;
     
-    // Hash function to check duplicates
-    function getHash(str) {
-        let hash = 0;
-        for (let i = 0; i < str.length; i++) {
-            hash = ((hash << 5) - hash) + str.charCodeAt(i);
-            hash = hash & hash;
-        }
-        return Math.abs(hash).toString();
-    }
-
     try {
         let arrayFotoTerkompres = [];
         let isCheat = false;

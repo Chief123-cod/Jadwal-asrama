@@ -5,7 +5,7 @@
 import { db } from "./database.js";
 import { initSidebarLogic } from "./sidebar-logic.js";
 import { ref as dbRef, get, update } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-database.js";
-import { munculNotif, initInactivityTimeout, logoutSistem } from "./utils.js";
+import { munculNotif, initInactivityTimeout, logoutSistem, kompresGambar } from "./utils.js";
 
 // Cek sesi login
 let currentUser = null;
@@ -95,29 +95,7 @@ window.simpanPengaturan = async function() {
     }
 }
 
-// Fungsi untuk mengompres gambar sebelum diubah ke Base64
-function kompresGambar(file) {
-    return new Promise((resolve) => {
-        let reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = function(event) {
-            let img = new Image();
-            img.src = event.target.result;
-            img.onload = function() {
-                let canvas = document.createElement("canvas");
-                // Background butuh resolusi lebih besar dari foto biasa, misal 1200px
-                let MAX_WIDTH = 1200; 
-                let scaleSize = img.width > MAX_WIDTH ? MAX_WIDTH / img.width : 1;
-                canvas.width = img.width > MAX_WIDTH ? MAX_WIDTH : img.width;
-                canvas.height = img.height * scaleSize;
-                let ctx = canvas.getContext("2d");
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                // Kompres kualitas menjadi 70%
-                resolve(canvas.toDataURL("image/jpeg", 0.7)); 
-            }
-        }
-    });
-}
+
 
 // Upload Background Login
 if (inputBgLogin) {
@@ -151,7 +129,7 @@ if (inputBgLogin) {
 
         try {
             // Kompres foto menjadi Base64 string
-            const base64Data = await kompresGambar(file);
+            const base64Data = await kompresGambar(file, 1200, 0.7);
 
             // Simpan ke DB langsung (Realtime Database)
             const pengaturanRef = dbRef(db, 'settings');

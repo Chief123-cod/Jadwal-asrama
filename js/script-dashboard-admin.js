@@ -5,18 +5,13 @@
 import { db } from "./database.js";
 import { initSidebarLogic } from "./sidebar-logic.js";
 import { ref, push, onValue, remove, update, get } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-database.js";
-import { munculNotif, initInactivityTimeout, logoutSistem } from "./utils.js";
+import { munculNotif, initInactivityTimeout, logoutSistem, escapeHtml, sortByHari, getHash } from "./utils.js";
 
 const LINK_WEB_KAMU = "https://chief123-cod.github.io/Jadwal-asrama/";
 
 let currentUser = null;
 let dataJadwal = [];
 
-// Urutan hari untuk sorting (Senin = 0, Minggu = 6)
-const URUTAN_HARI = { "Senin": 0, "Selasa": 1, "Rabu": 2, "Kamis": 3, "Jumat": 4, "Sabtu": 5, "Minggu": 6 };
-function sortByHari(arr) {
-    return arr.sort((a, b) => (URUTAN_HARI[a.hari] ?? 99) - (URUTAN_HARI[b.hari] ?? 99));
-}
 
 // Cek sesi login
 let sesi = sessionStorage.getItem("sesi_asrama");
@@ -39,7 +34,6 @@ initInactivityTimeout();
 async function jalankanLogikaOtomatis() {
     let now = new Date();
     let hariIniStr = now.toISOString().split('T')[0];
-    let jam = now.getHours();
     let isMinggu = now.getDay() === 0;
 
     try {
@@ -254,7 +248,7 @@ function renderTabel() {
                     <div class="kamar-card-icon">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4v16"></path><path d="M2 8h18a2 2 0 0 1 2 2v10"></path><path d="M2 17h20"></path><path d="M6 8v9"></path></svg>
                     </div>
-                    ${namaKamar}
+                    ${escapeHtml(namaKamar)}
                 </div>
                 ${cardBadge}
             </div>
@@ -304,7 +298,7 @@ function renderTabel() {
                 <div style="display:flex; width:100%; gap:10px; align-items:center;">
                     <div class="kamar-row-info" style="flex:1;">
                         <div style="display:flex; align-items:center; gap:6px;">
-                            <div class="kamar-row-name" style="font-weight:600; font-size:14px;">${item.nama}</div>
+                            <div class="kamar-row-name" style="font-weight:600; font-size:14px;">${escapeHtml(item.nama)}</div>
                             ${infoBtn}
                             ${editBtn}
                             ${deleteBtn}
@@ -314,7 +308,7 @@ function renderTabel() {
                 </div>
                 
                 <div style="display:flex; width:100%; justify-content:space-between; align-items:center; background:var(--surface2); padding:4px 10px; border-radius:8px; border:1px solid var(--border);">
-                    <div class="kamar-row-task" style="flex:1; margin-right:12px; font-size:12px; color:var(--text);">${item.tugas}</div>
+                    <div class="kamar-row-task" style="flex:1; margin-right:12px; font-size:12px; color:var(--text);">${escapeHtml(item.tugas)}</div>
                     <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
                         ${extraBtn}
                     </div>
@@ -436,40 +430,8 @@ onValue(ref(db, 'settings/pengumuman'), (snapshot) => {
     }
 });
 
-// Pengaturan Sistem
-window.bukaPengaturan = function() {
-    get(ref(db, 'settings')).then((snapshot) => {
-        let set = snapshot.val() || {};
-        document.getElementById("jamMulai").value = set.jamMulai || "05:00";
-        document.getElementById("jamSelesai").value = set.jamSelesai || "19:00";
-        document.getElementById("modalPengaturan").style.display = "flex";
-    });
-}
-
-window.tutupPengaturan = function() {
-    document.getElementById("modalPengaturan").style.display = "none";
-}
-
-window.simpanPengaturan = function() {
-    let jMulai = document.getElementById("jamMulai").value;
-    let jSelesai = document.getElementById("jamSelesai").value;
-    
-    if (!jMulai || !jSelesai) {
-        munculNotif("Jam tidak boleh kosong!", "#ff9800");
-        return;
-    }
-    
-    update(ref(db, 'settings'), {
-        jamMulai: jMulai,
-        jamSelesai: jSelesai
-    }).then(() => {
-        munculNotif("Pengaturan sistem berhasil disimpan!", "#28a745");
-        tutupPengaturan();
-    });
-}
-
-// Logout (dari utils.js, dengan extra key)
-window.logoutSistem = () => logoutSistem(['greetingHidden']);
+// Logout (dari utils.js)
+window.logoutSistem = () => logoutSistem();
 
 // Realtime Listener dari Firebase
 onValue(ref(db, 'jadwal_piket'), (snapshot) => {
@@ -642,16 +604,6 @@ window.terimaBukti = async function() {
     let currentPelanggaran = data.skorPelanggaran || 0;
     let currentSelesai = data.skorSelesai || 0;
     
-    // Simple fast hash function
-    function getHash(str) {
-        let hash = 0;
-        for (let i = 0; i < str.length; i++) {
-            hash = ((hash << 5) - hash) + str.charCodeAt(i);
-            hash = hash & hash;
-        }
-        return Math.abs(hash).toString();
-    }
-
     let updates = {};
     if (currentPelanggaran > 0) {
         updates['jadwal_piket/' + id + '/skorPelanggaran'] = currentPelanggaran - 1;

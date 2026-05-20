@@ -5,7 +5,7 @@
 import { db } from "./database.js";
 import { initSidebarLogic } from "./sidebar-logic.js";
 import { ref, get } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-database.js";
-import { munculNotif, initInactivityTimeout, logoutSistem } from "./utils.js";
+import { munculNotif, initInactivityTimeout, logoutSistem, escapeHtml } from "./utils.js";
 
 // Cek sesi login
 let currentUser = null;
@@ -58,10 +58,10 @@ async function loadGalleryData() {
                             <img src="${item.foto}" class="gallery-img" alt="Bukti Foto">
                         </div>
                         <div class="gallery-info">
-                            <div class="gallery-info-name">${item.nama}</div>
-                            <div class="gallery-info-task">${item.tugas}</div>
+                            <div class="gallery-info-name">${escapeHtml(item.nama)}</div>
+                            <div class="gallery-info-task">${escapeHtml(item.tugas)}</div>
                             <div class="gallery-info-meta">
-                                <span>Kamar: ${item.kamar}</span>
+                                <span>Kamar: ${escapeHtml(item.kamar)}</span>
                                 <span>${dateStr}</span>
                             </div>
                         </div>

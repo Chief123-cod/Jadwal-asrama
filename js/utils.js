@@ -63,3 +63,41 @@ export function escapeHtml(str) {
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
 }
+
+// Konstanta dan Fungsi Sortir
+export const URUTAN_HARI = { "Senin": 0, "Selasa": 1, "Rabu": 2, "Kamis": 3, "Jumat": 4, "Sabtu": 5, "Minggu": 6 };
+
+export function sortByHari(arr) {
+    return arr.sort((a, b) => (URUTAN_HARI[a.hari] ?? 99) - (URUTAN_HARI[b.hari] ?? 99));
+}
+
+// Kompresi Gambar
+export function kompresGambar(file, maxWidth = 800, quality = 0.6) {
+    return new Promise((resolve) => {
+        let reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = function(event) {
+            let img = new Image();
+            img.src = event.target.result;
+            img.onload = function() {
+                let canvas = document.createElement("canvas");
+                let scaleSize = img.width > maxWidth ? maxWidth / img.width : 1;
+                canvas.width = img.width > maxWidth ? maxWidth : img.width;
+                canvas.height = img.height * scaleSize;
+                let ctx = canvas.getContext("2d");
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                resolve(canvas.toDataURL("image/jpeg", quality));
+            }
+        }
+    });
+}
+
+// Simple fast hash function
+export function getHash(str) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        hash = ((hash << 5) - hash) + str.charCodeAt(i);
+        hash = hash & hash;
+    }
+    return Math.abs(hash).toString();
+}
