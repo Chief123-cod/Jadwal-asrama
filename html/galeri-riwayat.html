@@ -174,66 +174,6 @@
         </div>
     </div>
 
-    <script>
-        function toggleSidebar() {
-            if (window.innerWidth <= 768) {
-                document.getElementById('appSidebar').classList.toggle('mobile-open');
-                let overlay = document.getElementById('mobileOverlay');
-                if (overlay.classList.contains('active')) {
-                    overlay.classList.remove('active');
-                    setTimeout(() => overlay.style.display = 'none', 300);
-                    document.body.style.overflow = '';
-                } else {
-                    overlay.style.display = 'block';
-                    setTimeout(() => overlay.classList.add('active'), 10);
-                    document.body.style.overflow = 'hidden';
-                }
-            } else {
-                let sidebar = document.getElementById('appSidebar');
-                sidebar.classList.remove('keep-open'); // Force remove temporary lock
-                sidebar.classList.toggle('collapsed');
-                if (sidebar.classList.contains('collapsed')) {
-                    localStorage.setItem('sidebar_state', 'collapsed');
-                } else {
-                    localStorage.setItem('sidebar_state', 'open');
-                }
-            }
-        }
-        function closeSidebarMobile() {
-            if (window.innerWidth <= 768) {
-                document.getElementById('appSidebar').classList.remove('mobile-open');
-                let overlay = document.getElementById('mobileOverlay');
-                overlay.classList.remove('active');
-                setTimeout(() => overlay.style.display = 'none', 300);
-                document.body.style.overflow = '';
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            let sidebar = document.getElementById('appSidebar');
-            let activeItem = document.querySelector('.sidebar-item.active');
-            
-            if(activeItem) {
-                activeItem.addEventListener('click', function(e) {
-                    if (window.innerWidth > 768) {
-                        sidebar.classList.add('keep-open');
-                        e.stopPropagation();
-                    }
-                });
-            }
-
-            let topbar = document.querySelector('.topbar');
-            if(topbar) {
-                topbar.addEventListener('click', function(e) {
-                    if (window.innerWidth > 768 && sidebar.classList.contains('keep-open')) {
-                        if (!e.target.closest('.hamburger-btn')) {
-                            sidebar.classList.remove('keep-open');
-                        }
-                    }
-                });
-            }
-        });
-    </script>
 
 
 

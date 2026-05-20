@@ -3,6 +3,7 @@
 // ===========================
 
 import { db } from "./database.js";
+import { initSidebarLogic } from "./sidebar-logic.js";
 import { ref, push, onValue, remove, update, get } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-database.js";
 import { munculNotif, initInactivityTimeout, logoutSistem } from "./utils.js";
 
@@ -27,6 +28,9 @@ if (!sesi) {
         window.location.href = "dashboard-user.html";
     }
 }
+
+// Panggil Sidebar Logic
+initSidebarLogic();
 
 // Inactivity Timeout (dari utils.js)
 initInactivityTimeout();
