@@ -11,10 +11,12 @@ export function initSidebarLogic() {
                 overlay.classList.remove('active');
                 setTimeout(() => overlay.style.display = 'none', 300);
                 document.body.style.overflow = '';
+                document.body.classList.remove('sidebar-mobile-open');
             } else {
                 overlay.style.display = 'block';
                 setTimeout(() => overlay.classList.add('active'), 10);
                 document.body.style.overflow = 'hidden';
+                document.body.classList.add('sidebar-mobile-open');
             }
         } else {
             let sidebar = document.getElementById('appSidebar');
@@ -37,6 +39,7 @@ export function initSidebarLogic() {
                 setTimeout(() => overlay.style.display = 'none', 300);
             }
             document.body.style.overflow = '';
+            document.body.classList.remove('sidebar-mobile-open');
         }
     };
 

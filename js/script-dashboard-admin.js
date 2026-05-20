@@ -300,7 +300,7 @@ function renderTabel() {
             }
 
             cardHTML += `
-            <div class="kamar-row" style="flex-direction:column; align-items:flex-start; gap:6px;">
+            <div class="kamar-row" style="flex-direction:column; align-items:flex-start; gap:4px; padding:8px 20px;">
                 <div style="display:flex; width:100%; gap:10px; align-items:center;">
                     <div class="kamar-row-info" style="flex:1;">
                         <div style="display:flex; align-items:center; gap:6px;">
@@ -309,11 +309,11 @@ function renderTabel() {
                             ${editBtn}
                             ${deleteBtn}
                         </div>
-                        <div style="margin-top:2px;">${statusBadge}</div>
+                        <div style="margin-top:1px;">${statusBadge}</div>
                     </div>
                 </div>
                 
-                <div style="display:flex; width:100%; justify-content:space-between; align-items:center; background:var(--surface2); padding:6px 12px; border-radius:8px; border:1px solid var(--border);">
+                <div style="display:flex; width:100%; justify-content:space-between; align-items:center; background:var(--surface2); padding:4px 10px; border-radius:8px; border:1px solid var(--border);">
                     <div class="kamar-row-task" style="flex:1; margin-right:12px; font-size:12px; color:var(--text);">${item.tugas}</div>
                     <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
                         ${extraBtn}
