@@ -133,7 +133,7 @@ jalankanLogikaOtomatis();
 
 
 
-// Update Stats Cards
+// Update Stats Badges
 function updateStats() {
     let total = dataJadwal.length;
     let done = dataJadwal.filter(d => d.selesai).length;
@@ -142,9 +142,9 @@ function updateStats() {
     let elDone = document.getElementById("statDone");
     let elPending = document.getElementById("statPending");
     let elEmpty = document.getElementById("tableEmpty");
-    if (elTotal) elTotal.textContent = total;
-    if (elDone) elDone.textContent = done;
-    if (elPending) elPending.textContent = pending;
+    if (elTotal) elTotal.textContent = total + " Total Jadwal";
+    if (elDone) elDone.textContent = done + " Selesai";
+    if (elPending) elPending.textContent = pending + " Belum";
     if (elEmpty) elEmpty.style.display = total === 0 ? 'block' : 'none';
 }
 
@@ -167,7 +167,6 @@ function renderTabel() {
     wadahTabel.innerHTML = "";
     if (!currentUser) return;
     updateStats();
-    renderLeaderboard();
 
     let searchVal = document.getElementById("searchJadwal") ? document.getElementById("searchJadwal").value.toLowerCase() : "";
     let hariVal = document.getElementById("filterHari") ? document.getElementById("filterHari").value : "Semua";
@@ -325,43 +324,6 @@ function renderTabel() {
     wadahTabel.innerHTML = gridHTML;
 }
 
-// Render Leaderboard
-function renderLeaderboard() {
-    let wadah = document.getElementById("leaderboardList");
-    if (!wadah) return;
-    wadah.innerHTML = "";
-    
-    let userStats = {};
-    dataJadwal.forEach(item => {
-        if (!userStats[item.nowa]) {
-            userStats[item.nowa] = { nama: item.nama, poin: item.skorSelesai || 0 };
-        } else {
-            userStats[item.nowa].poin += (item.skorSelesai || 0);
-        }
-    });
-    
-    let sortedUsers = Object.values(userStats).sort((a,b) => b.poin - a.poin);
-    
-    if (sortedUsers.length === 0 || sortedUsers[0].poin === 0) {
-        wadah.innerHTML = `<p style="font-size:12px; color:var(--text2); grid-column:1/-1;">Belum ada tugas diselesaikan.</p>`;
-        return;
-    }
-    
-    sortedUsers.slice(0, 5).forEach((u, i) => {
-        if (u.poin === 0) return;
-        let medali = i === 0 ? "🥇" : (i === 1 ? "🥈" : (i === 2 ? "🥉" : ""));
-        let html = `
-            <div style="background:var(--surface2); padding:10px; border-radius:8px; border:1px solid var(--border); display:flex; align-items:center; gap:8px;">
-                <div style="font-size:20px; width:24px; text-align:center;">${medali || (i+1)}</div>
-                <div style="min-width:0; flex:1;">
-                    <div style="font-size:13px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${u.nama}</div>
-                    <div style="font-size:11px; color:var(--text2);">${u.poin} Poin Tugas</div>
-                </div>
-            </div>
-        `;
-        wadah.innerHTML += html;
-    });
-}
 
 // Theme & Broadcast
 window.toggleTheme = function() {
@@ -792,118 +754,3 @@ window.exportPDF = function() {
     munculNotif("File PDF berhasil didownload!", "#28a745");
 }
 
-// Fitur 4: Import Excel (Dengan Validasi Duplikat)
-document.getElementById('inputExcelData').addEventListener('change', async function(e) {
-    let file = e.target.files[0];
-    if (!file) return;
-    
-    // Notifikasi loading
-    munculNotif("Membaca file Excel...", "#17a2b8");
-
-    let reader = new FileReader();
-    reader.onload = async function(evt) {
-        try {
-            let data = evt.target.result;
-            let workbook = XLSX.read(data, {type: 'binary'});
-            let firstSheetName = workbook.SheetNames[0];
-            let worksheet = workbook.Sheets[firstSheetName];
-            let jsonData = XLSX.utils.sheet_to_json(worksheet);
-
-            if(jsonData.length === 0) {
-                munculNotif("File Excel kosong atau format salah!", "#dc3545");
-                return;
-            }
-
-            // Ambil data existing dari Firebase untuk validasi duplikat
-            let existingNowa = new Set();
-            let existingJadwal = new Set();
-            try {
-                let snapshot = await get(ref(db, 'jadwal_piket'));
-                if (snapshot.exists()) {
-                    snapshot.forEach(child => {
-                        let d = child.val();
-                        existingNowa.add(d.nowa);
-                        existingJadwal.add(d.hari + '|' + d.kamar);
-                    });
-                }
-            } catch (err) {
-                console.error("Gagal mengecek data existing:", err);
-                munculNotif("Gagal mengecek data existing. Coba lagi.", "#dc3545");
-                return;
-            }
-
-            let berhasil = 0;
-            let dilewati = 0;
-            let alasanLewat = [];
-
-            for (let row of jsonData) {
-                let nama = row.Nama || row.nama || row.NAMA;
-                let kamar = row.Kamar || row.kamar || row.KAMAR;
-                let nowa = row.No_WA || row.NoWA || row.no_wa || row.nowa || row['No WA'] || row['NO WA'];
-                let hari = row.Hari || row.hari || row.HARI;
-                let tugas = row.Tugas || row.tugas || row.TUGAS;
-                let password = row.Password || row.password || "123456";
-
-                if (nama && nowa && hari && tugas) {
-                    let formattedNowa = String(nowa).trim();
-                    if (formattedNowa.startsWith("0")) {
-                        formattedNowa = "62" + formattedNowa.substring(1);
-                    }
-                    let kamarStr = kamar ? String(kamar) : "Belum dipilih";
-                    let jadwalKey = hari + '|' + kamarStr;
-
-                    // Validasi duplikat nomor HP
-                    if (existingNowa.has(formattedNowa)) {
-                        dilewati++;
-                        alasanLewat.push(`${nama} - HP sudah terdaftar`);
-                        continue;
-                    }
-
-                    // Validasi duplikat Hari + Kamar
-                    if (existingJadwal.has(jadwalKey)) {
-                        dilewati++;
-                        alasanLewat.push(`${nama} - ${kamarStr} hari ${hari} sudah ada`);
-                        continue;
-                    }
-
-                    await push(ref(db, 'jadwal_piket'), {
-                        nama: nama,
-                        kamar: kamarStr,
-                        tugas: tugas,
-                        hari: hari,
-                        nowa: formattedNowa,
-                        password: String(password),
-                        selesai: false,
-                        menungguVerifikasi: false,
-                        alpa: false,
-                        foto: "", fotos: [], pesanAdmin: "", pesanUser: "", pesanDibaca: false,
-                        skorSelesai: 0, skorPelanggaran: 0, teguranCount: 0
-                    });
-
-                    // Tambah ke set agar baris berikutnya di Excel juga dicek
-                    existingNowa.add(formattedNowa);
-                    existingJadwal.add(jadwalKey);
-                    berhasil++;
-                }
-            }
-
-            if (berhasil > 0 && dilewati > 0) {
-                munculNotif(`Import: ${berhasil} berhasil, ${dilewati} dilewati (duplikat).`, "#ff9800");
-                console.log("Data dilewati karena duplikat:", alasanLewat);
-            } else if (berhasil > 0) {
-                munculNotif(`Berhasil import ${berhasil} jadwal dari Excel!`, "#28a745");
-            } else if (dilewati > 0) {
-                munculNotif(`Semua ${dilewati} data dilewati karena duplikat!`, "#dc3545");
-                console.log("Data dilewati karena duplikat:", alasanLewat);
-            } else {
-                munculNotif("Tidak ada data valid yang bisa diimport. Pastikan kolom Nama, No WA, Hari, Tugas ada.", "#ff9800");
-            }
-        } catch (err) {
-            console.error(err);
-            munculNotif("Gagal membaca Excel. Pastikan file valid.", "#dc3545");
-        } finally {
-            e.target.value = ""; // Reset input
-        }
-    };
-    reader.readAsBinaryString(file);
-});
